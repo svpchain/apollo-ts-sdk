@@ -1,6 +1,6 @@
 # Apollo TypeScript SDK
 
-English | [简体中文](README.zh-CN.md)
+English | [简体中文](README_zh-CN.md)
 
 `@svpchain/trading-sdk` is Apollo's HTTP JSON-RPC trading SDK for web apps, Node.js services, and trading bots.
 

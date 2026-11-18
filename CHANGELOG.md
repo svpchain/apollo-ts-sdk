@@ -2,6 +2,10 @@
 
 English | [简体中文](CHANGELOG.zh-CN.md)
 
+## 1.0.2
+
+- The npm package page now shows the English README. The Chinese README is renamed to `README_zh-CN.md` and remains available on GitHub.
+
 ## 1.0.1
 
 - Added English documentation; English is now the default. The Chinese docs moved to `README.zh-CN.md` and `docs/zh-CN/`, with a language switcher at the top of every page.

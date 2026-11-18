@@ -6,7 +6,7 @@
 
 包名：`@svpchain/trading-sdk`，遵循语义化版本，各版本变更见 [版本记录](CHANGELOG.zh-CN.md)。
 
-SDK 使用 ESM，附带 TypeScript 类型声明。安装方法见 [快速开始](README.zh-CN.md#安装)。
+SDK 使用 ESM，附带 TypeScript 类型声明。安装方法见 [快速开始](README_zh-CN.md#安装)。
 
 ## 运行环境
 

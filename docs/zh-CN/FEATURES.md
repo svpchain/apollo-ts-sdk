@@ -31,7 +31,7 @@ Apollo TypeScript SDK 提供永续交易所需的市场查询、账户查询、�
 
 ## 阅读顺序
 
-1. [快速开始](../../README.zh-CN.md)：安装、查询及第一笔交易。
+1. [快速开始](../../README_zh-CN.md)：安装、查询及第一笔交易。
 2. [API 总览](API.md)：初始化选项、参数类型和方法索引。
 3. [市场和账户查询](reference/INFO.md)：行情、资产、仓位、挂单和授权。
 4. [交易接口](reference/EXCHANGE.md)：下单、撤单、改单、风险设置和高级订单。

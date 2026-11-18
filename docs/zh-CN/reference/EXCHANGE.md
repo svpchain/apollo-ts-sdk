@@ -227,7 +227,7 @@ console.log(agents.agents);
 
 `approveAgent(slot, publicKey, expiry = 0n, options?)` 的 slot 为 1–4，publicKey 为 32 字节，expiry 是到期高度，0 表示无到期高度。`revokeAgent(slot, options?)` 撤销指定槽位。
 
-**返回**：授权动作执行结果。需要确认执行成功后才能使用新 agent。agent 无权管理授权；换 key 或撤销可能使之前准备的签名失效。owner 的钱包和本地 key 接入见 [README](../../../README.zh-CN.md#owner-钱包与-agent-授权)。
+**返回**：授权动作执行结果。需要确认执行成功后才能使用新 agent。agent 无权管理授权；换 key 或撤销可能使之前准备的签名失效。owner 的钱包和本地 key 接入见 [README](../../../README_zh-CN.md#owner-钱包与-agent-授权)。
 
 ## 先准备，再提交
 
