@@ -1,39 +1,41 @@
-# 历史数据
+# Historical Data
 
-历史数据由目标 archive 节点及索引提供。`Info` 的方法负责查询，历史是否完整取决于该节点保存的数据范围。
+English | [简体中文](../zh-CN/reference/HISTORY.md)
 
-## 索引状态：indexStatus
+Historical data is served by the target archive node and its index. `Info` methods handle the queries; whether history is complete depends on the data range the node retains.
 
-**用途**：确认能查到的最早高度，以及索引是否已经追上链。
+## Index status: indexStatus
+
+**Purpose**: confirm the earliest queryable height and whether the index has caught up with the chain.
 
 ```ts
 const index = await info.indexStatus();
 console.log(index.firstHeight, index.indexedHeight, index.executedHeight);
 ```
 
-| 返回字段 | 含义 |
+| Returned field | Meaning |
 | --- | --- |
-| `firstHeight` | 节点历史记录开始的高度 |
-| `indexedHeight` | 历史索引处理到的高度 |
-| `executedHeight` | 节点当前执行高度 |
+| `firstHeight` | Height at which the node's history records begin |
+| `indexedHeight` | Height processed by the history index |
+| `executedHeight` | Node's current executed height |
 
-如果索引落后，最近交易可能尚未出现在历史中；如果节点从快照启动，快照前的历史也可能不可查询。空列表不能单独证明交易没有发生。
+If the index lags, recent transactions may not yet appear in history; if the node started from a snapshot, history before the snapshot may also be unavailable. An empty list alone does not prove a transaction did not happen.
 
-## 成交：userFills
+## Fills: userFills
 
-**用途**：读取账户或市场的实际成交，用于成交展示、仓位和交易对账。
+**Purpose**: read actual fills for an account or market, for displaying fills and reconciling positions and trades.
 
 ```text
 info.userFills(params, options?)
 ```
 
-| 参数 | 类型 | 说明 |
+| Parameter | Type | Description |
 | --- | --- | --- |
-| `account` | `bigint`，可选 | 链上账户 ID |
-| `market` | `number`，可选 | 市场 ID，0 是有效值 |
-| `fromHeight` | `bigint`，可选 | 起始高度 |
-| `after` | `{ height, index }`，可选 | 上一页返回的游标 |
-| `limit` | `number`，可选 | 最多 1,000；0 或不传使用默认 100 |
+| `account` | `bigint`, optional | On-chain account ID |
+| `market` | `number`, optional | Market ID; 0 is a valid value |
+| `fromHeight` | `bigint`, optional | Starting height |
+| `after` | `{ height, index }`, optional | Cursor returned by the previous page |
+| `limit` | `number`, optional | Up to 1,000; 0 or omitted uses the default of 100 |
 
 ```ts
 const page = await info.userFills({ account: BigInt(account), limit: 100 });
@@ -46,13 +48,13 @@ if (page.next) {
 }
 ```
 
-**返回**：`fills` 成交列表、`index` 索引状态、可选 `next` 游标。下一页保留原过滤条件，仅更新 `after`。
+**Returns**: the `fills` list, `index` status, and an optional `next` cursor. For the next page, keep the original filters and only update `after`.
 
-成交价格和数量需按市场精度转换。订单执行成功与实际产生 fill 是不同判断；业务应核对所属账户、订单和成交数量。
+Fill prices and sizes must be converted using market precision. Successful order execution and an actual fill are separate checks; your application should verify the account, order, and filled size.
 
-## 账户手续费与成交返佣：userFees
+## Account fees and fill rebates: userFees
 
-**用途**：统计成交记录中的本账户交易手续费和成交返佣，包括 maker / taker 角色和分市场汇总。
+**Purpose**: total this account's trading fees and fill rebates from fill records, including maker / taker roles and per-market summaries.
 
 ```ts
 import { microUsdToUsd } from '@svpchain/trading-sdk';
@@ -66,20 +68,20 @@ console.log({
 console.log(page.summary.byMarket, page.index, page.next);
 ```
 
-参数与 `userFills()` 的过滤条件一致，但 `account` 是必填的 number。返回 `summary`、`index` 和可选 `next`；每次只查询、汇总一页成交。
+Parameters match the filters of `userFills()`, but `account` is a required number. Returns `summary`, `index`, and an optional `next`; each call queries and summarizes only one page of fills.
 
-| 汇总字段 | 含义 |
+| Summary field | Meaning |
 | --- | --- |
-| `makerFees` / `takerFees` | 本账户在两种角色下的有符号费用，负数表示返佣 |
-| `feesPaid` / `rebates` | 支付与返佣的正数金额 |
-| `netFees` | 支付减返佣，负数表示净收到返佣 |
-| `fillCount` | 涉及本账户的成交记录数 |
-| `makerFillCount` / `takerFillCount` | 各角色的成交记录数 |
-| `byMarket` | 按市场 ID 排序的各市场费用和计数 |
+| `makerFees` / `takerFees` | Signed fees of this account in each role; negative values are rebates |
+| `feesPaid` / `rebates` | Positive amounts of fees paid and rebates |
+| `netFees` | Fees paid minus rebates; negative means net rebates received |
+| `fillCount` | Number of fill records involving this account |
+| `makerFillCount` / `takerFillCount` | Number of fill records per role |
+| `byMarket` | Per-market fees and counts, sorted by market ID |
 
-金额均为微 USD 的 bigint，运算不经过 JS number。同一笔成交两侧都是本账户时，费用会同时计入两侧，fillCount 只计一次。费用口径为每条成交中的 makerFee / takerFee，返佣按其中的负手续费统计。
+All amounts are micro-USD `bigint`s, and arithmetic never goes through JS numbers. When both sides of a fill are this account, its fees count toward both sides while fillCount counts it once. Fees are taken from each fill's makerFee / takerFee, and rebates are counted from negative fees among them.
 
-跨页求净费用示例：
+Example of computing net fees across pages:
 
 ```ts
 import { type UserFeesParams, microUsdToUsd } from '@svpchain/trading-sdk';
@@ -94,9 +96,9 @@ do {
 console.log(microUsdToUsd(netFees));
 ```
 
-循环应保留相同过滤条件，避免重复累加同一页。扫描期间链和索引可能继续前进，各页返回当次查询的索引状态。结果覆盖节点可查询的历史范围；展示汇总时应同时记录 firstHeight、indexedHeight 和执行高度。
+The loop should keep the same filters to avoid adding the same page twice. The chain and index may keep advancing during the scan, and each page returns the index status at the time of that query. Results cover the history range queryable on the node; when displaying totals, also record firstHeight, indexedHeight, and the executed height.
 
-已取得成交记录时可直接汇总，不再请求节点：
+If you already have fill records, you can summarize them directly without querying the node:
 
 ```ts
 import { summarizeFees } from '@svpchain/trading-sdk';
@@ -106,9 +108,9 @@ const summary = summarizeFees(account, page.fills);
 console.log(summary.netFees, summary.byMarket);
 ```
 
-## 订单动作与账户动作：historicalOrders / actionHistory
+## Order actions and account actions: historicalOrders / actionHistory
 
-**用途**：核查下单、撤单、改单等操作，或账户的更广泛动作历史。
+**Purpose**: review operations such as placing, cancelling, and modifying orders, or the account's broader action history.
 
 ```ts
 const orderActions = await info.historicalOrders({ account: BigInt(account), limit: 100 });
@@ -117,15 +119,15 @@ for (const action of orderActions.actions) console.log(action.kind, action.resul
 console.log(allActions.next);
 ```
 
-两个方法接收相同参数：`account: bigint`、可选 `fromHeight: bigint`、`after`、`limit`。业务调用必须提供账户 ID。
+Both methods take the same parameters: `account: bigint`, optional `fromHeight: bigint`, `after`, and `limit`. Application calls must provide an account ID.
 
-**返回**：`actions`、`index`、可选 `next`。每项含动作种类、执行结果和所在区块内位置。
+**Returns**: `actions`, `index`, and an optional `next`. Each item contains the action kind, execution result, and its position within the block.
 
-`historicalOrders()` 返回订单相关的动作与执行记录。判断订单成交情况时，结合当前挂单、成交数量和动作执行结果核查。
+`historicalOrders()` returns order-related actions and execution records. To determine whether an order was filled, check it together with current open orders, filled size, and action execution results.
 
-## K 线：candlesSnapshot
+## Candles: candlesSnapshot
 
-**用途**：读取某市场在时间范围内的成交 K 线。
+**Purpose**: read trade candles for a market over a time range.
 
 ```ts
 import { history } from '@svpchain/trading-sdk/protocol';
@@ -141,22 +143,22 @@ const candles = await info.candlesSnapshot({
 console.log(candles.candles);
 ```
 
-示例时间为参数演示，实际替换为目标链有数据的范围。
+The timestamps in the example are for illustration only; replace them with a range that has data on the target chain.
 
-| 参数 | 类型 | 说明 |
+| Parameter | Type | Description |
 | --- | --- | --- |
-| `market` | `number` | 市场 ID |
-| `interval` | `history.CandleInterval` | 1m、5m、15m、1h、4h、1d |
-| `fromUnixS` / `toUnixS` | `bigint` | Unix 秒；结束时间为 0 表示当前时间 |
-| `limit` | `number` | 最多 1,000；默认 100 |
+| `market` | `number` | Market ID |
+| `interval` | `history.CandleInterval` | 1m, 5m, 15m, 1h, 4h, 1d |
+| `fromUnixS` / `toUnixS` | `bigint` | Unix seconds; an end time of 0 means now |
+| `limit` | `number` | Up to 1,000; default 100 |
 
-**返回**：`candles` 和 `index`。每根 K 线含起始秒、开高低收、基础币成交数量和成交笔数。
+**Returns**: `candles` and `index`. Each candle contains the start second, open/high/low/close, base-asset volume, and trade count.
 
-OHLC 价格使用 `priceUnitsToPrice()`，成交量使用 `quantumsToSize()`。无成交的区间可能不返回 K 线；不要假定返回数组与每分钟时间刻度一一对应。SDK 不自动补齐或缓存 K 线。
+Use `priceUnitsToPrice()` for OHLC prices and `quantumsToSize()` for volume. Intervals with no trades may return no candle; do not assume the returned array maps one-to-one to each minute. The SDK does not fill gaps in or cache candles.
 
-## 市场资金费指数：fundingHistory
+## Market funding index: fundingHistory
 
-**用途**：查询市场资金费累计指数的历史采样。
+**Purpose**: query historical samples of a market's cumulative funding index.
 
 ```ts
 const market = await info.market('BTC-USD');
@@ -164,8 +166,8 @@ const funding = await info.fundingHistory({ market: market.id, fromHeight: 0n, l
 for (const point of funding.points) console.log(point.height, point.fundingIndex);
 ```
 
-参数为 `market: number`、可选 `fromHeight: bigint`、`limit: number`。返回 `points` 和 `index`，每项为高度及资金费指数。
+Parameters are `market: number`, optional `fromHeight: bigint`, and `limit: number`. Returns `points` and `index`; each point is a height and its funding index.
 
-fundingIndex 是市场累计结算指数。按市场和高度读取指数变化，用于分析资金费累计情况。
+fundingIndex is the market's cumulative settlement index. Read index changes by market and height to analyze cumulative funding.
 
-继续阅读 [结果处理](RESULTS.md)，了解提交超时、动作缓存无记录及历史索引延迟时的处理。
+Continue with [result handling](RESULTS.md) to learn how to handle submit timeouts, missing records in the action cache, and history index lag.

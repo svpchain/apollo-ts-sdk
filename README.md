@@ -1,27 +1,29 @@
 # Apollo TypeScript SDK
 
-`@svpchain/trading-sdk` 是 Apollo 的 HTTP JSON-RPC 交易 SDK，可用于 Web 应用、Node.js 服务和交易机器人。
+English | [简体中文](README.zh-CN.md)
 
-接口按 `Info` / `Exchange` 组织：`Info` 查询市场和账户，`Exchange` 负责签名、下单和账户操作。价格、数量使用十进制字符串，交易结果逐项返回。
+`@svpchain/trading-sdk` is Apollo's HTTP JSON-RPC trading SDK for web apps, Node.js services, and trading bots.
 
-| 客户端 | 常用方法 |
+The API is organized into `Info` and `Exchange`: `Info` queries markets and accounts, while `Exchange` handles signing, order placement, and account operations. Prices and sizes are decimal strings, and trading results are returned per item.
+
+| Client | Common methods |
 | --- | --- |
-| `Info` | `meta`、`l2Snapshot`、`userState`、`openOrders`、`userFills`、`userFees` |
-| `Exchange` | `order`、`bulkOrders`、`bulkModify`、`cancelTwap`、`marketOpen`、`marketClose` |
+| `Info` | `meta`, `l2Snapshot`, `userState`, `openOrders`, `userFills`, `userFees` |
+| `Exchange` | `order`, `bulkOrders`, `bulkModify`, `cancelTwap`, `marketOpen`, `marketClose` |
 
-支持的交易与查询接口见 [功能总览](docs/FEATURES.md)。各类接口按用途、参数、调用示例和返回值介绍。
+See the [feature overview](docs/FEATURES.md) for the supported trading and query APIs. Each group of APIs is documented by purpose, parameters, examples, and return values.
 
-## 安装
+## Installation
 
 ```bash
 npm install @svpchain/trading-sdk
 ```
 
-默认安装最新正式版，并把具体版本写入你项目的 `package.json` 和 lock 文件。需要固定版本时写明版本号，例如 `npm install @svpchain/trading-sdk@1.0.0`。各版本的变更见 [版本记录](CHANGELOG.md)。
+This installs the latest stable release and records the exact version in your project's `package.json` and lock file. To pin a version, specify it explicitly, e.g. `npm install @svpchain/trading-sdk@1.0.0`. See the [changelog](CHANGELOG.md) for changes in each version.
 
-运行环境为 Node.js 22+，或支持 `fetch`、`AbortController`、`BigInt` 的现代浏览器。SDK 为 ESM，附带 TypeScript 类型声明，不依赖 React。
+Requires Node.js 22+, or a modern browser that supports `fetch`, `AbortController`, and `BigInt`. The SDK is ESM, ships TypeScript type declarations, and does not depend on React.
 
-## 查询市场和账户
+## Query markets and accounts
 
 ```ts
 import { Info } from '@svpchain/trading-sdk';
@@ -36,21 +38,21 @@ const account = await info.userState('0xYourOwnerAddress');
 console.log(book.bids, book.asks, account.account);
 ```
 
-`baseUrl` 填 Apollo 节点的 HTTP(S) JSON-RPC 地址。`coin` 是市场列表里的完整 `ticker`，例如 `BTC-USD`，不应直接填 `BTC`。账户交易使用链上数字 ID；可先通过 owner 地址查询。
+`baseUrl` is the HTTP(S) JSON-RPC endpoint of an Apollo node. `coin` is the full `ticker` from the market list, such as `BTC-USD`; do not pass `BTC` alone. Trading uses the account's numeric on-chain ID, which you can look up from the owner address first.
 
-查询返回的是带类型的链上数据，64 位整数为 `bigint`。显示价格和数量时使用 SDK 的转换工具，见 [API](docs/API.md)。
+Queries return typed on-chain data, with 64-bit integers as `bigint`. To display prices and sizes, use the SDK's conversion helpers; see [API](docs/API.md).
 
-## 用已授权的 agent 下单
+## Place orders with an approved agent
 
-下面的 `seed`、`account`、`expectedGenesisHash` 都应从你的环境提供；agent 公钥需要事先获得账户 owner 授权。
+`seed`, `account`, and `expectedGenesisHash` below should all come from your environment. The agent public key must be approved by the account owner beforehand.
 
 ```ts
 import { Exchange, hexToBytes32 } from '@svpchain/trading-sdk';
 
 const exchange = new Exchange({
   baseUrl: 'https://rpc.example.com',
-  expectedGenesisHash, // 目标链的创世哈希，0x 十六进制或 32 字节
-  account,            // 链上账户数字 ID
+  expectedGenesisHash, // genesis hash of the target chain, 0x hex or 32 bytes
+  account,            // numeric on-chain account ID
   signer: { type: 'agent', seed: hexToBytes32(agentSeedHex), slot: 1 },
 });
 
@@ -66,29 +68,29 @@ for (const status of response.statuses) {
   console.log(status.prepared.transactionHash, status.submitStatus, status.outcome);
 }
 if (!response.successful()) {
-  // 逐项处理拒绝、待确认或 nonce 已用等结果。
+  // Handle rejected, pending, or nonce-used results item by item.
   console.log(response.statuses);
 }
 ```
 
-默认等待执行最多 15 秒。`successful()` 表示全部动作执行成功，**不能据此认定订单已成交**；挂单和成交需继续查询。节点接收和执行失败也会逐项返回，详见 [结果处理](docs/USAGE.md)。
+By default the SDK waits up to 15 seconds for execution. `successful()` means every action executed successfully; **it does not mean the order was filled**. Query open orders and fills separately. Node acceptance and execution failures are also returned per item; see [handling results](docs/USAGE.md).
 
-## 常用交易
+## Common trading operations
 
 ```ts
-// 批量下单：一个提交请求，逐项返回结果。
+// Bulk orders: one submit request, results returned per item.
 const batch = await exchange.bulkOrders([
   { coin: 'BTC-USD', isBuy: true, price: '64000', size: '0.001' },
   { coin: 'BTC-USD', isBuy: false, price: '66000', size: '0.001', position: 'Short' },
 ]);
 
-// 市价意图会转换为带滑点保护的 IOC 订单，默认滑点 1%。
+// Market intents are converted to IOC orders with slippage protection; default slippage is 1%.
 const opened = await exchange.marketOpen({
   coin: 'BTC-USD', isBuy: true, size: '0.001', slippage: '0.01',
 });
 
 const cancelled = await exchange.cancel({ coin: 'BTC-USD', orderId });
-const allCancelled = await exchange.cancelAll('BTC-USD'); // '' 表示全部市场
+const allCancelled = await exchange.cancelAll('BTC-USD'); // '' means all markets
 const modified = await exchange.modifyOrder({
   coin: 'BTC-USD', orderId, price: '65100', size: '0.001',
 });
@@ -97,11 +99,11 @@ const closed = await exchange.marketClose({
 });
 ```
 
-每次调用都会执行对应交易。上面的代码展示方法签名，实际接入时应根据业务选择调用，并检查每次返回结果。
+Each call executes the corresponding trade. The code above shows method signatures; in a real integration, choose the calls your application needs and check every result.
 
-Apollo 支持多空持仓槽位，平仓要指定 `Long` / `Short` 和数量。默认全仓；`isolated: true` 选择逐仓。改单会先撤旧单再建新单，新单失败时旧单可能已经撤销。批量操作不保证原子执行。
+Apollo supports separate long and short position slots, so closing a position requires `Long` / `Short` and a size. Cross margin is the default; `isolated: true` selects isolated margin. Modifying an order cancels the old order and then creates a new one; if the new order fails, the old one may already be cancelled. Batch operations are not guaranteed to execute atomically.
 
-## 批量改单、TWAP 取消与费用
+## Bulk modify, TWAP cancellation, and fees
 
 ```ts
 const modified = await exchange.bulkModify([
@@ -114,9 +116,9 @@ console.log(modified.statuses, cancelled.statuses);
 console.log(fees.summary.feesPaid, fees.summary.rebates, fees.summary.netFees, fees.next);
 ```
 
-TWAP 取消使用父订单 ID，会取消父计划和当前子单。费用按成交记录中的 makerFee / takerFee 统计，使用微 USD 整数，`feesPaid` 和 `rebates` 为正数，`netFees` 为支付减返佣。`userFees()` 汇总当前成交页，保留 `next` 和索引范围；全量汇总需要继续分页。详见 [交易接口](docs/reference/EXCHANGE.md) 和 [费用说明](docs/reference/HISTORY.md#账户手续费与成交返佣userfees)。
+TWAP cancellation uses the parent order ID and cancels both the parent plan and its current child order. Fees are computed from the makerFee / takerFee of fill records, in integer micro-USD. `feesPaid` and `rebates` are positive, and `netFees` is fees paid minus rebates. `userFees()` summarizes the current page of fills and keeps `next` and the index range; a full total requires paging through all results. See [trading APIs](docs/reference/EXCHANGE.md) and [fees](docs/reference/HISTORY.md#account-fees-and-fill-rebates-userfees).
 
-## Owner 钱包与 agent 授权
+## Owner wallet and agent approval
 
 ```ts
 import { Exchange, createWalletSigner, createAgentSigner } from '@svpchain/trading-sdk';
@@ -132,12 +134,12 @@ const owner = new Exchange({
 const { publicKey } = createAgentSigner(agentSeed, 1, 0);
 const approval = await owner.approveAgent(1, publicKey, 0n);
 if (!approval.successful()) throw new Error('Agent approval is not confirmed');
-// 0n 表示无到期高度。确认授权后，再使用该 agent 交易。
+// 0n means no expiry height. Trade with this agent only after the approval is confirmed.
 ```
 
-Node.js 服务也可使用 `createOwnerKeySigner(ownerPrivateKey)`。钱包签名回调与本地 owner key 都会在准备阶段核对链上 owner 身份。agent 授权槽位为 1–4，agent 不能批准或撤销其他 agent。
+Node.js services can also use `createOwnerKeySigner(ownerPrivateKey)`. Both the wallet signing callback and a local owner key verify the on-chain owner identity during the prepare step. Agent approval slots are 1–4, and an agent cannot approve or revoke other agents.
 
-## 只准备，不广播
+## Prepare without broadcasting
 
 ```ts
 const prepared = await exchange.prepareOrder({
@@ -145,37 +147,37 @@ const prepared = await exchange.prepareOrder({
 });
 console.log(prepared.transactionHash, prepared.nonce);
 
-// 业务确认后，显式提交已准备的交易。
+// After your application confirms, explicitly submit the prepared transaction.
 const response = await exchange.submitPrepared([prepared]);
 ```
 
-SDK 不自动重发交易。提交超时或响应丢失时，使用原 account / nonce 查询结果，避免直接生成第二笔订单。准备和提交之间若发生 agent 撤销、换 key 或切链，会拒绝提交。
+The SDK never resends transactions automatically. If a submit times out or the response is lost, query the result using the original account / nonce instead of creating a second order. If the agent is revoked, its key is rotated, or the chain changes between prepare and submit, the submit is rejected.
 
-## 并发与限制
+## Concurrency and limits
 
-- 同一 Exchange 内共享 nonce 分配器。多个实例操作同一账户时，显式传入同一个 `nonceManager`；多个进程需要外部原子协调。
-- 批量上限为 20,000 项，还受到请求字节大小和服务端限制；并非任意 20,000 项都能成功提交。
-- 价格、数量、保证金均传字符串；不符合 tick / step 的限价或数量会报错。
+- An Exchange instance shares a single nonce allocator. When multiple instances operate on the same account, pass the same `nonceManager` explicitly; multiple processes require external atomic coordination.
+- Batches are limited to 20,000 items and are also subject to request byte size and server limits; not every 20,000-item batch can be submitted successfully.
+- Pass prices, sizes, and margin as strings; limit prices or sizes that do not match tick / step throw an error.
 
-## 文档与示例
+## Docs and examples
 
-- [功能总览](docs/FEATURES.md)
-- [API 参数与返回值](docs/API.md)
-- [市场和账户查询](docs/reference/INFO.md)
-- [交易接口](docs/reference/EXCHANGE.md)
-- [历史数据](docs/reference/HISTORY.md)
-- [交易结果与异常](docs/reference/RESULTS.md)
-- [接入、结果处理与并发](docs/USAGE.md)
-- [版本与运行环境](PROVENANCE.md)
-- [版本记录](CHANGELOG.md)
-- [命令行示例用法](examples/README.md)：查询挂单、准备订单、改单和撤单。
-- `examples/query.ts`：只读查询。
-- `examples/order.ts`：默认只准备，显式 `--submit` 才广播。
-- `examples/wallet.ts`：钱包授权 agent。
-- `examples/open-orders.ts`：查询并格式化挂单，可按订单 ID 筛选。
-- `examples/cancel.ts`：准备或提交指定订单的撤单，并核对撤单后的挂单。
-- `examples/modify-order.ts`：准备或提交指定订单的价格和数量修改。
-- `examples/trading.ts`：交易与撤单集成函数。
+- [Feature overview](docs/FEATURES.md)
+- [API parameters and return values](docs/API.md)
+- [Market and account queries](docs/reference/INFO.md)
+- [Trading APIs](docs/reference/EXCHANGE.md)
+- [Historical data](docs/reference/HISTORY.md)
+- [Trading results and errors](docs/reference/RESULTS.md)
+- [Integration, result handling, and concurrency](docs/USAGE.md)
+- [Versions and runtime](PROVENANCE.md)
+- [Changelog](CHANGELOG.md)
+- [Command-line examples](examples/README.md): query open orders, prepare orders, modify and cancel orders.
+- `examples/query.ts`: read-only queries.
+- `examples/order.ts`: prepares only by default; broadcasts only with explicit `--submit`.
+- `examples/wallet.ts`: approve an agent from a wallet.
+- `examples/open-orders.ts`: query and format open orders, optionally filtered by order ID.
+- `examples/cancel.ts`: prepare or submit cancellation of a given order, then verify open orders after cancellation.
+- `examples/modify-order.ts`: prepare or submit a price and size change for a given order.
+- `examples/trading.ts`: integrated trading and cancellation functions.
 
 ```bash
 npm run check

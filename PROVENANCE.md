@@ -1,24 +1,26 @@
-# 版本与运行环境
+# Versions and Runtime
 
-## 版本
+English | [简体中文](PROVENANCE.zh-CN.md)
 
-包名：`@svpchain/trading-sdk`，遵循语义化版本，各版本变更见 [版本记录](CHANGELOG.md)。
+## Versions
 
-SDK 使用 ESM，附带 TypeScript 类型声明。安装方法见 [快速开始](README.md#安装)。
+Package name: `@svpchain/trading-sdk`. It follows semantic versioning; see the [changelog](CHANGELOG.md) for changes in each version.
 
-## 运行环境
+The SDK is ESM and ships TypeScript type declarations. See [quick start](README.md#installation) for installation.
 
-- Node.js 22 及以上。
-- 支持 `fetch`、`AbortController`、`BigInt` 和 `structuredClone` 的现代浏览器。
-- TypeScript 项目使用支持 ESM 的模块配置。
+## Runtime
 
-## 客户端
+- Node.js 22 or later.
+- Modern browsers that support `fetch`, `AbortController`, `BigInt`, and `structuredClone`.
+- TypeScript projects must use an ESM-compatible module configuration.
 
-- `Info`：市场、盘口、账户、持仓、挂单、成交、费用及历史查询。
-- `Exchange`：下单、撤单、改单、杠杆、逐仓保证金、TWAP、分批订单及 agent 授权。
+## Clients
 
-## 接入配置
+- `Info`: markets, order book, accounts, positions, open orders, fills, fees, and historical queries.
+- `Exchange`: place order, cancel order, modify order, leverage, isolated margin, TWAP, scaled orders, and agent approval.
 
-`baseUrl` 使用目标环境的 Apollo HTTP(S) JSON-RPC 地址。交易客户端配置账户 ID、signer 和目标创世哈希。历史查询连接提供 archive 索引的节点，并通过 `indexStatus()` 确认数据高度。
+## Configuration
 
-接口目录见 [功能总览](docs/FEATURES.md)，参数与结果类型见 [API](docs/API.md)。
+Set `baseUrl` to the Apollo HTTP(S) JSON-RPC endpoint of the target environment. The trading client is configured with an account ID, a signer, and the target genesis hash. For historical queries, connect to a node that provides an archive index, and check the indexed height with `indexStatus()`.
+
+See the [feature overview](docs/FEATURES.md) for the API catalog and [API](docs/API.md) for parameter and result types.

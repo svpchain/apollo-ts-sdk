@@ -1,18 +1,20 @@
 # API
 
-入口分为 `Info`（只读查询）和 `Exchange`（签名交易），通过 Apollo HTTP JSON-RPC 提供交易接入。
+English | [简体中文](zh-CN/API.md)
 
-本页为选项与类型总览。按业务查阅：
+The entry points are `Info` (read-only queries) and `Exchange` (signed trading), providing trading access over Apollo HTTP JSON-RPC.
 
-| 页面 | 内容 |
+This page is an overview of options and types. Browse by task:
+
+| Page | Contents |
 | --- | --- |
-| [功能总览](FEATURES.md) | 交易、查询、授权及结果处理接口 |
-| [市场和账户查询](reference/INFO.md) | 市场、盘口、行情、资产、仓位及挂单 |
-| [交易接口](reference/EXCHANGE.md) | 下单、撤单、改单、风险设置及授权 |
-| [历史数据](reference/HISTORY.md) | 成交、订单动作、K 线、资金费指数及分页 |
-| [结果与异常](reference/RESULTS.md) | 接收、执行、成交及恢复处理 |
+| [Feature overview](FEATURES.md) | Trading, query, authorization, and result-handling APIs |
+| [Market and account queries](reference/INFO.md) | Markets, order book, tickers, assets, positions, and open orders |
+| [Trading APIs](reference/EXCHANGE.md) | Place, cancel, and modify orders, risk settings, and authorization |
+| [Historical data](reference/HISTORY.md) | Fills, order actions, candles, funding index, and pagination |
+| [Results and errors](reference/RESULTS.md) | Acceptance, execution, fills, and recovery |
 
-## 初始化
+## Initialization
 
 ```ts
 import { Info, Exchange } from '@svpchain/trading-sdk';
@@ -24,59 +26,58 @@ const exchange = new Exchange({
 });
 ```
 
-| 公共选项 | 类型 | 说明 |
+| Common option | Type | Description |
 | --- | --- | --- |
-| `baseUrl` | `string` | 节点 HTTP(S) JSON-RPC 地址，必填 |
-| `expectedGenesisHash` | `0x` 字符串或 `Uint8Array` | 可选的目标链创世哈希，32 字节；交易接入建议显式设置 |
-| `defaultTimeoutMs` | `number` | 单次请求超时，默认 10,000 毫秒 |
-| `maxRequestBytes` | `number` | 单次请求字节上限，默认 8 MiB；还需遵守服务端限制 |
-| `maxResponseBytes` | `number` | 单次响应字节上限，默认 16 MiB |
-| `fetch` | `typeof fetch` | 自定义请求函数 |
-| `nonceManager` | `NonceManager` | 同一账户在多个交易实例间共享 nonce 时传入 |
+| `baseUrl` | `string` | Node HTTP(S) JSON-RPC endpoint, required |
+| `expectedGenesisHash` | `0x` string or `Uint8Array` | Optional 32-byte genesis hash of the target chain; recommended to set explicitly for trading |
+| `defaultTimeoutMs` | `number` | Per-request timeout, default 10,000 ms |
+| `maxRequestBytes` | `number` | Per-request byte limit, default 8 MiB; server limits also apply |
+| `maxResponseBytes` | `number` | Per-response byte limit, default 16 MiB |
+| `fetch` | `typeof fetch` | Custom request function |
+| `nonceManager` | `NonceManager` | Pass when multiple trading instances share nonces for the same account |
 
-`Exchange` 另需 `account: number` 和 `signer: ExchangeSigner`。`account` 是已存在的非 vault 账户 ID，范围为 1–4,294,967,295。
+`Exchange` additionally requires `account: number` and `signer: ExchangeSigner`. `account` is the ID of an existing non-vault account, in the range 1–4,294,967,295.
 
-每个查询方法的最后一个参数均可传 `{ signal?: AbortSignal }`。交易方法还可传 `SubmitOptions`：
+The last argument of every query method accepts `{ signal?: AbortSignal }`. Trading methods also accept `SubmitOptions`:
 
-| 交易选项 | 默认值 | 说明 |
+| Trading option | Default | Description |
 | --- | --- | --- |
-| `waitForExecution` | `true` | 是否在节点接收后继续查询执行结果 |
-| `timeoutMs` | `15000` | 执行轮询总等待时间，毫秒；显式设置时也用于提交请求 |
-| `intervalMs` | `250` | 执行轮询间隔，毫秒 |
-| `signal` | 无 | 取消本次请求和等待；已接收交易仍可能执行 |
+| `waitForExecution` | `true` | Whether to keep querying execution results after the node accepts |
+| `timeoutMs` | `15000` | Total wait time for execution polling, in ms; when set explicitly, also applies to the submit request |
+| `intervalMs` | `250` | Execution polling interval, in ms |
+| `signal` | none | Cancels this request and wait; accepted transactions may still execute |
 
-`exchange.connect()` 可提前验证链身份，返回链信息。Exchange 首次连接后会固定该链的创世哈希，后续签名或提交会重新核对。
+`exchange.connect()` verifies the chain identity up front and returns chain info. After its first connection, Exchange pins that chain's genesis hash and re-checks it on every subsequent sign or submit.
 
 ## Info
 
-返回值保留 RPC 的带类型响应结构，64 位整数为 `bigint`，字节为 `Uint8Array`，枚举为对应数值。历史请求的 `account` 是 `bigint`；便捷账户方法使用 `number`。
+Return values keep the RPC's typed response structure: 64-bit integers are `bigint`, bytes are `Uint8Array`, and enums are their numeric values. The `account` in history requests is a `bigint`; the convenience account methods use `number`.
 
-| 方法 | 参数 | 返回内容 |
+| Method | Parameters | Returns |
 | --- | --- | --- |
-| `chainInfo()` | — | chainId、genesisHash、executedHeight 等 |
-| `meta()` | — | `markets` 市场列表及状态、精度、mark 等 |
-| `market(coin)` | 完整 ticker | 单个市场对象，找不到会报错 |
-| `l2Snapshot(market, depth = 20)` | 市场 ID、深度 | `bids` / `asks` 盘口 |
-| `ticker(market)` | 市场 ID | 最新行情 |
-| `userState(owner)` | 20 字节 owner 地址或 `0x` 字符串 | 账户信息；不存在时按 RPC 规则报错 |
-| `userStateById(account)` | 账户 ID | 账户信息 |
-| `positions(account)` | 账户 ID | 多空仓位 |
-| `openOrders(account, market?)` | 可选市场 ID | 挂单；不传市场表示全部，`0` 是有效市场 ID |
-| `agents(account)` | 账户 ID | 已授权 agent、槽位、序号、到期高度 |
-| `nonce(account)` | 账户 ID | 已使用的 nonce 状态 |
-| `userRateLimit(account)` | 账户 ID | 累计动作额度 `used` / `limit` / `remaining` |
-| `actionStatus(keys)` | `[{ account, nonce }]`，1–10,000 项 | 每项执行状态，核对返回键、数量与状态 |
-| `transaction(hash)` | 32 字节哈希或 `0x` 字符串 | 交易查询结果，核对返回哈希 |
-| `indexStatus()` | — | 历史索引状态 |
-| `userFills(params)` | `UserFillsParams` | 成交列表与 `next` 游标 |
-| `userFees(params)` | `UserFeesParams` | 当前页成交的手续费汇总、`index` 和 `next` |
-| `historicalOrders(params)` | `UserFeesParams` | `account: number` 必填，其余市场、高度、游标和 limit 与 `UserFillsParams` 一致 |
-| `HistoryParams` | 历史订单与游标 |
-| `actionHistory(params)` | `HistoryParams` | 账户动作历史与游标 |
-| `candlesSnapshot(params)` | `CandlesParams` | K 线 |
-| `fundingHistory(params)` | `FundingHistoryParams` | 资金费指数历史 |
+| `chainInfo()` | — | chainId, genesisHash, executedHeight, etc. |
+| `meta()` | — | `markets` list with status, precision, mark, etc. |
+| `market(coin)` | Full ticker | A single market object; throws if not found |
+| `l2Snapshot(market, depth = 20)` | Market ID, depth | `bids` / `asks` order book |
+| `ticker(market)` | Market ID | Latest ticker |
+| `userState(owner)` | 20-byte owner address or `0x` string | Account info; throws per RPC rules if it does not exist |
+| `userStateById(account)` | Account ID | Account info |
+| `positions(account)` | Account ID | Long and short positions |
+| `openOrders(account, market?)` | Optional market ID | Open orders; omit the market for all markets, `0` is a valid market ID |
+| `agents(account)` | Account ID | Approved agents, slots, sequence numbers, expiry heights |
+| `nonce(account)` | Account ID | Used-nonce state |
+| `userRateLimit(account)` | Account ID | Cumulative action allowance `used` / `limit` / `remaining` |
+| `actionStatus(keys)` | `[{ account, nonce }]`, 1–10,000 items | Execution status per item; verify the returned keys, count, and status |
+| `transaction(hash)` | 32-byte hash or `0x` string | Transaction query result; verify the returned hash |
+| `indexStatus()` | — | History index status |
+| `userFills(params)` | `UserFillsParams` | Fill list and `next` cursor |
+| `userFees(params)` | `UserFeesParams` | Fee summary for the current page of fills, `index`, and `next` |
+| `historicalOrders(params)` | `HistoryParams` | Historical orders and cursor |
+| `actionHistory(params)` | `HistoryParams` | Account action history and cursor |
+| `candlesSnapshot(params)` | `CandlesParams` | Candles |
+| `fundingHistory(params)` | `FundingHistoryParams` | Funding index history |
 
-历史查询依赖 archive 节点及其索引状态。`next` 存在时，将它作为下次请求的 `after`，并保留其他过滤条件。
+Historical queries depend on an archive node and its index status. When `next` is present, pass it as `after` in the next request and keep the other filters.
 
 ```ts
 const first = await info.userFills({ account: BigInt(account), limit: 100 });
@@ -88,16 +89,17 @@ if (first.next) {
 }
 ```
 
-| 历史参数 | 字段 |
+| History params | Fields |
 | --- | --- |
-| `UserFillsParams` | `account?: bigint`、`market?: number`、`fromHeight?: bigint`、`after?: { height?: bigint; index?: number }`、`limit?: number` |
-| `HistoryParams` | `account?: bigint`、`fromHeight?: bigint`、`after?`、`limit?: number`；业务上须传 account |
-| `CandlesParams` | `market?: number`、`interval?: CandleInterval`、`fromUnixS?: bigint`、`toUnixS?: bigint`、`limit?: number` |
-| `FundingHistoryParams` | `market?: number`、`fromHeight?: bigint`、`limit?: number` |
+| `UserFillsParams` | `account?: bigint`, `market?: number`, `fromHeight?: bigint`, `after?: { height?: bigint; index?: number }`, `limit?: number` |
+| `UserFeesParams` | `account: number` is required; market, height, cursor, and limit are the same as `UserFillsParams` |
+| `HistoryParams` | `account?: bigint`, `fromHeight?: bigint`, `after?`, `limit?: number`; account is required in practice |
+| `CandlesParams` | `market?: number`, `interval?: CandleInterval`, `fromUnixS?: bigint`, `toUnixS?: bigint`, `limit?: number` |
+| `FundingHistoryParams` | `market?: number`, `fromHeight?: bigint`, `limit?: number` |
 
-这些参数从 RPC 的类型生成，使用 TypeScript 自动补全即可；K 线枚举为 `@svpchain/trading-sdk/protocol` 中的 `history.CandleInterval`。历史 limit 服务端最多 1,000，0 表示默认 100。
+These params are generated from the RPC types, so TypeScript autocompletion covers them; the candle enum is `history.CandleInterval` from `@svpchain/trading-sdk/protocol`. The server caps history limit at 1,000; 0 means the default of 100.
 
-## 下单：order / bulkOrders
+## Place orders: order / bulkOrders
 
 ```ts
 const request = {
@@ -108,30 +110,30 @@ const response = await exchange.order(request);
 const batch = await exchange.bulkOrders([request, request]);
 ```
 
-`CreateOrderRequest`：
+`CreateOrderRequest`:
 
-| 字段 | 类型 / 默认值 | 说明 |
+| Field | Type / default | Description |
 | --- | --- | --- |
-| `coin` | `string`，必填 | 市场完整 ticker |
-| `isBuy` | `boolean`，必填 | true 买入，false 卖出 |
-| `size` | 十进制 `string`，必填 | 基础币数量，必须符合市场 step |
-| `price` | 十进制 `string` | 限价单及触发限价单必填，必须符合 tick |
-| `orderType` | 默认普通限价 | `limit` 与 `trigger` 二选一 |
-| `orderType.limit.tif` | `Gtc` / `Ioc` / `PostOnly`，默认 `Gtc` | 委托有效方式 |
-| `orderType.trigger.triggerPrice` | 十进制 `string` | 触发价，须符合 tick |
-| `orderType.trigger.isMarket` | `boolean` | 触发后是否按市价意图执行 |
-| `orderType.trigger.tpsl` | `tp` / `sl` | 止盈 / 止损 |
-| `reduceOnly` | `false` | 只减仓 |
-| `position` | `Long` / `Short` | 默认买入对应 Long、卖出对应 Short；减仓应明确指定 |
-| `isolated` | `false` | true 逐仓，false 全仓 |
-| `goodTilBlock` | `bigint` | 有效截止区块高度，0 表示不设置 |
-| `builder` | `{ account: number; feePpm: number }` | 可选 builder 信息 |
-| `referencePrice` | 十进制 `string` | 触发市价单保护价格的参考价；不传则查询盘口，再回退 mark |
-| `slippage` | 十进制 `string`，默认 `'0.01'` | 市价保护比例，范围 0–1，不含 1 |
+| `coin` | `string`, required | Full market ticker |
+| `isBuy` | `boolean`, required | true to buy, false to sell |
+| `size` | decimal `string`, required | Base-asset size; must match the market step |
+| `price` | decimal `string` | Required for limit orders and trigger limit orders; must match tick |
+| `orderType` | defaults to a plain limit order | Either `limit` or `trigger` |
+| `orderType.limit.tif` | `Gtc` / `Ioc` / `PostOnly`, default `Gtc` | Time in force |
+| `orderType.trigger.triggerPrice` | decimal `string` | Trigger price; must match tick |
+| `orderType.trigger.isMarket` | `boolean` | Whether to execute as a market intent once triggered |
+| `orderType.trigger.tpsl` | `tp` / `sl` | Take profit / stop loss |
+| `reduceOnly` | `false` | Reduce-only |
+| `position` | `Long` / `Short` | Defaults to Long for buys and Short for sells; specify explicitly when reducing |
+| `isolated` | `false` | true for isolated margin, false for cross margin |
+| `goodTilBlock` | `bigint` | Expiry block height; 0 means not set |
+| `builder` | `{ account: number; feePpm: number }` | Optional builder info |
+| `referencePrice` | decimal `string` | Reference price for the protective price of trigger market orders; if omitted, the order book is queried, falling back to mark |
+| `slippage` | decimal `string`, default `'0.01'` | Market protection ratio, in the range 0–1, excluding 1 |
 
-价格、数量均为正数十进制字符串，不能传 JS number 或科学计数法。超出市场可表示精度、偏离 tick / step、市场未启用等情况会在广播前报错。
+Prices and sizes are positive decimal strings; JS numbers and scientific notation are not accepted. Exceeding the market's representable precision, deviating from tick / step, an inactive market, and similar cases throw before broadcasting.
 
-止损市价示例：
+Stop-loss market example:
 
 ```ts
 const stopped = await exchange.order({
@@ -142,22 +144,22 @@ const stopped = await exchange.order({
 });
 ```
 
-## 撤单与改单
+## Cancel and modify orders
 
-| 方法 | 请求 |
+| Method | Request |
 | --- | --- |
 | `cancel(request)` | `{ coin: string; orderId: bigint }` |
-| `bulkCancel(requests)` | 上述请求数组 |
-| `cancelAll(coin = '')` | 完整 ticker；空字符串表示所有市场 |
+| `bulkCancel(requests)` | Array of the above requests |
+| `cancelAll(coin = '')` | Full ticker; an empty string means all markets |
 | `modifyOrder(request)` | `{ coin; orderId; price: string; size: string }` |
-| `bulkModify(requests)` | 上述改单请求数组，1–20,000 项，单次提交并逐项返回 |
-| `cancelTwap(request)` | `{ coin: string; orderId: bigint }`，orderId 是 TWAP 父订单 ID |
+| `bulkModify(requests)` | Array of the above modify requests, 1–20,000 items, submitted once and returned per item |
+| `cancelTwap(request)` | `{ coin: string; orderId: bigint }`, where orderId is the TWAP parent order ID |
 
-`orderId` 必须使用 `bigint`，避免超出 JS 安全整数范围。改单属于撤旧单后重新挂单，新单被拒不代表旧单仍存在。
+`orderId` must be a `bigint` to avoid exceeding the JS safe integer range. Modifying an order cancels the old order and places a new one; a rejected new order does not mean the old order still exists.
 
-`cancelTwap()` 复用现有撤单动作，取消父计划和当前子单。批量改单先验证整批字段后签名，链上各项独立执行。
+`cancelTwap()` reuses the existing cancel action and cancels the parent plan and its current child order. Bulk modify validates fields for the whole batch before signing; each item executes independently on-chain.
 
-## 市价开仓与平仓
+## Market open and close
 
 ```ts
 await exchange.marketOpen({
@@ -168,22 +170,22 @@ await exchange.marketClose({
 });
 ```
 
-`MarketOrderRequest` 接收 `coin`、`isBuy`、`size`、`position?`、`reduceOnly?`、`isolated?`、`referencePrice?`、`slippage?`。没有裸市价单：买入参考卖一，卖出参考买一，盘口为空时回退 mark，再生成 IOC 保护限价。
+`MarketOrderRequest` accepts `coin`, `isBuy`, `size`, `position?`, `reduceOnly?`, `isolated?`, `referencePrice?`, `slippage?`. There are no naked market orders: buys reference the best ask, sells reference the best bid, an empty order book falls back to mark, and the SDK then builds an IOC order with a protective limit price.
 
-`ClosePositionRequest` 必填 `position` 和 `size`，SDK 决定买卖方向并强制只减仓。不会自动读取持仓、决定数量或修改杠杆。
+`ClosePositionRequest` requires `position` and `size`; the SDK determines the buy/sell side and forces reduce-only. It does not read positions, choose a size, or change leverage automatically.
 
-## 杠杆与保证金
+## Leverage and margin
 
 ```ts
 const leverage = await exchange.updateLeverage('BTC-USD', '5');
 const margin = await exchange.updateIsolatedMargin('BTC-USD', 'Long', '10.50');
 ```
 
-`updateLeverage(coin, leverage)` 使用十进制杠杆字符串，范围为 1–1,000,000，实际可用上限仍受市场风控约束。
+`updateLeverage(coin, leverage)` takes leverage as a decimal string in the range 1–1,000,000; the actual usable maximum is still constrained by market risk controls.
 
-`updateIsolatedMargin(coin, position, amount)` 的金额单位为 USD，正数增加、负数减少，精确到 6 位小数；更高精度会拒绝。
+`updateIsolatedMargin(coin, position, amount)` takes an amount in USD: positive to add, negative to remove, with up to 6 decimal places; higher precision is rejected.
 
-## TWAP 与分批订单
+## TWAP and scaled orders
 
 ```ts
 const twap = await exchange.twapOrder({
@@ -197,79 +199,79 @@ const scaled = await exchange.scaledOrder({
 });
 ```
 
-`CreateTwapOrderRequest` 必填 `coin`、`isBuy`、`size`、`durationS`、`intervalS`，可选 `price`、`tolerancePpm`、`position`、`reduceOnly`、`isolated`。`tolerancePpm` 默认 10,000（1%），范围 0–999,999。TWAP 执行成功表示计划被建立，不代表计划所有子单已经成交。
+`CreateTwapOrderRequest` requires `coin`, `isBuy`, `size`, `durationS`, `intervalS`, with optional `price`, `tolerancePpm`, `position`, `reduceOnly`, `isolated`. `tolerancePpm` defaults to 10,000 (1%), in the range 0–999,999. A successful TWAP execution means the plan was created, not that all of its child orders have been filled.
 
-`CreateScaledOrderRequest` 必填 `coin`、`isBuy`、`size`、`lowestPrice`、`highestPrice`、`numOrders`。可选：
+`CreateScaledOrderRequest` requires `coin`, `isBuy`, `size`, `lowestPrice`, `highestPrice`, `numOrders`. Optional:
 
-- `profile`：`Equal`（默认）、`IncRatio`、`IncDiff`、`DecRatio`、`DecDiff`。
-- `spacing`：`Linear`（默认）或 `Geometric`。
-- `magnitudePpm`：默认 0，Equal 必须为 0；其他策略需满足相应数量分配约束。
-- `tif`：`Gtc`（默认）或 `Ioc`。
-- `position`、`reduceOnly`、`isolated`、`goodTilBlock`：含义与普通下单相同。
+- `profile`: `Equal` (default), `IncRatio`, `IncDiff`, `DecRatio`, `DecDiff`.
+- `spacing`: `Linear` (default) or `Geometric`.
+- `magnitudePpm`: default 0, and must be 0 for Equal; other profiles must satisfy their size-distribution constraints.
+- `tif`: `Gtc` (default) or `Ioc`.
+- `position`, `reduceOnly`, `isolated`, `goodTilBlock`: same meaning as for regular orders.
 
-`size` 是总数量，子单数量和价格还需满足市场精度及链上校验。
+`size` is the total size; child order sizes and prices must also satisfy market precision and on-chain validation.
 
-## Signer 与 agent 管理
+## Signers and agent management
 
-| Signer | 创建方式 |
+| Signer | How to create |
 | --- | --- |
-| agent | `{ type: 'agent', seed: Uint8Array, slot?: number }`，32 字节 seed，slot 默认 1 |
-| 钱包 owner | `createWalletSigner(signTypedDataCallback)` |
-| 本地 owner | `createOwnerKeySigner(privateKey)`，32 字节或 `0x` 字符串 |
+| agent | `{ type: 'agent', seed: Uint8Array, slot?: number }`, 32-byte seed, slot defaults to 1 |
+| Wallet owner | `createWalletSigner(signTypedDataCallback)` |
+| Local owner | `createOwnerKeySigner(privateKey)`, 32 bytes or `0x` string |
 
-钱包回调收到完整 typed data，异步返回 `0x` 签名字符串。owner 交易先验证签名地址与链上账户一致；agent 交易使用链上的当前授权序号。
+The wallet callback receives the full typed data and asynchronously returns a `0x` signature string. Owner transactions first verify that the signing address matches the on-chain account; agent transactions use the current on-chain approval sequence number.
 
 ```ts
 const approved = await owner.approveAgent(1, publicKey, 0n);
-// 先检查 approved.successful()。撤销时：
+// Check approved.successful() first. To revoke:
 const revoked = await owner.revokeAgent(1);
 ```
 
-`approveAgent(slot, publicKey, expiry = 0n)` / `revokeAgent(slot)` 仅限 owner。slot 为 1–4，publicKey 为 32 字节，expiry 为到期区块高度，0 表示无到期高度。换 key / 撤销后，旧签名可能失效。
+`approveAgent(slot, publicKey, expiry = 0n)` / `revokeAgent(slot)` are owner-only. slot is 1–4, publicKey is 32 bytes, and expiry is the expiry block height, where 0 means no expiry height. After a key rotation or revocation, earlier signatures may become invalid.
 
-## 准备、执行与扩展交易
+## Prepare, execute, and extended transactions
 
-| 方法 | 作用 |
+| Method | Purpose |
 | --- | --- |
-| `prepareOrder(request)` | 按用户字段准备单笔订单，返回 `PreparedAction`，不广播 |
-| `prepare(action)` / `prepareActions(actions)` | 准备已构造的 `TradingAction`，不广播 |
-| `execute(action)` / `executeActions(actions)` | 准备并提交已构造的 `TradingAction` |
-| `submitPrepared(prepared[])` | 核对已签名数据并批量提交，返回 `OrderResponse` |
+| `prepareOrder(request)` | Prepares a single order from user-facing fields and returns a `PreparedAction`, without broadcasting |
+| `prepare(action)` / `prepareActions(actions)` | Prepares pre-built `TradingAction`s, without broadcasting |
+| `execute(action)` / `executeActions(actions)` | Prepares and submits pre-built `TradingAction`s |
+| `submitPrepared(prepared[])` | Verifies signed data and submits it as a batch, returning an `OrderResponse` |
 
-`TradingAction` 使用链上单位；普通接入优先使用 `order()` 等字段接口。`PreparedAction` 提供对账所需的 `account`、`nonce`、`genesisHash`、`transactionHash`，并保留签名交易供后续提交，不包含私钥。
+`TradingAction` uses on-chain units; regular integrations should prefer field-based APIs such as `order()`. `PreparedAction` provides the `account`, `nonce`, `genesisHash`, and `transactionHash` needed for reconciliation, and keeps the signed transaction for later submission; it does not contain the private key.
 
-新 Exchange 在准备阶段检查累计动作额度；Cancel / CancelAll 免额度。批量最多 20,000 项，提交还受到请求字节上限约束；不会自动拆分成多次提交。执行查询会按每次最多 10,000 项分组。
+A new Exchange checks the cumulative action allowance during the prepare step; Cancel / CancelAll are exempt. Batches are limited to 20,000 items, and submission is also subject to the request byte limit; batches are not automatically split into multiple submits. Execution queries are grouped into chunks of at most 10,000 items.
 
-## 返回值与错误
+## Return values and errors
 
-交易方法统一返回 `OrderResponse`：
+All trading methods return an `OrderResponse`:
 
-- `id: bigint`：提交批次 ID。
-- `statuses: OrderStatus[]`：与请求一一对应的逐项结果。
-- `submit: SubmitResult`：节点接收结果。
-- `successful(): boolean`：全部项 `outcome.kind === 'executed' && outcome.ok` 才为 true。
+- `id: bigint`: submit batch ID.
+- `statuses: OrderStatus[]`: per-item results in one-to-one correspondence with the request.
+- `submit: SubmitResult`: node acceptance result.
+- `successful(): boolean`: true only if every item has `outcome.kind === 'executed' && outcome.ok`.
 
-每个 `OrderStatus` 含 `prepared`、`submitStatus`、`outcome`，失败时可能带 `error`。`submitStatus` 为 `accepted`、`malformed`、`bad_signature` 或 `unavailable`。
+Each `OrderStatus` contains `prepared`, `submitStatus`, and `outcome`, and may include `error` on failure. `submitStatus` is `accepted`, `malformed`, `bad_signature`, or `unavailable`.
 
-| `outcome.kind` | 含义 |
+| `outcome.kind` | Meaning |
 | --- | --- |
-| `executed` | 已执行；继续检查 `ok` / `reject`，不能据此认定成交 |
-| `pending` | 未等待或等待期限内仍未确认 |
-| `not_submitted` | 节点明确未接收此项 |
-| `nonce_used` | nonce 已使用，但没有可用执行详情 |
+| `executed` | Executed; still check `ok` / `reject`, and do not treat it as filled |
+| `pending` | Not waited for, or still unconfirmed within the wait period |
+| `not_submitted` | The node explicitly did not accept this item |
+| `nonce_used` | The nonce has been used, but no execution details are available |
 
-| 错误类 | 证据与处理 |
+| Error class | Evidence and handling |
 | --- | --- |
-| `ActionAllowanceError` | 含 `used`、`limit`、`required`，签名前停止 |
-| `ChainIdentityError` | 目标链或已准备交易的创世哈希不一致 |
-| `ExchangeSubmissionUnknownError` | 含原始 `prepared[]`，提交响应丢失或无法信任，先对账 |
-| `ExchangeTrackingError` | 含已接收证据 `response`，后续查询失败或取消，继续查原交易 |
-| `ConnectError` | 请求或 RPC 层错误，可检查 `code` |
-| `TypeError` / `RangeError` | 参数、精度、签名或一致性校验失败 |
+| `ActionAllowanceError` | Contains `used`, `limit`, `required`; stops before signing |
+| `ChainIdentityError` | Genesis hash of the target chain or of a prepared transaction does not match |
+| `ExchangeSubmissionUnknownError` | Contains the original `prepared[]`; the submit response was lost or cannot be trusted, so reconcile first |
+| `ExchangeTrackingError` | Contains acceptance evidence in `response`; subsequent queries failed or were cancelled, so keep checking the original transactions |
+| `ConnectError` | Request or RPC-layer error; inspect `code` |
+| `TypeError` / `RangeError` | Parameter, precision, signature, or consistency validation failed |
 
-业务执行拒绝保留在逐项结果中，不会一律抛异常。恢复示例见 [USAGE](USAGE.md)。
+Business-level execution rejections are kept in the per-item results and are not always thrown as exceptions. See [USAGE](USAGE.md) for recovery examples.
 
-## 显示工具与扩展查询
+## Display helpers and extended queries
 
 ```ts
 import { marketUnits, subticksToPrice, priceUnitsToPrice, quantumsToSize } from '@svpchain/trading-sdk';
@@ -284,25 +286,25 @@ if (book.bids[0]) {
 console.log(priceUnitsToPrice(market.mark, units));
 ```
 
-盘口和挂单价格使用 `subticksToPrice`；成交、mark / oracle 和 K 线价格使用 `priceUnitsToPrice`；数量使用 `quantumsToSize`；USD 微单位使用 `microUsdToUsd`。不要对所有价格套同一个转换。
+Use `subticksToPrice` for order book and open-order prices; `priceUnitsToPrice` for fill, mark / oracle, and candle prices; `quantumsToSize` for sizes; and `microUsdToUsd` for micro-USD amounts. Do not apply the same conversion to every price.
 
-`info.rpc` 暴露生成的一元查询服务，`info.client` 保留旧 `ApolloClient` 访问入口；例如 `info.rpc.market.getOrderBook(...)`。
+`info.rpc` exposes the generated unary query services, and `info.client` keeps the legacy `ApolloClient` entry point; for example, `info.rpc.market.getOrderBook(...)`.
 
-## 成交手续费汇总
+## Fill fee summary
 
-`info.userFees({ account, market?, fromHeight?, after?, limit? }, options?)` 查询一页成交，并返回 `{ summary, index, next }`。`account` 为数字 ID，其他参数沿用成交查询。
+`info.userFees({ account, market?, fromHeight?, after?, limit? }, options?)` queries one page of fills and returns `{ summary, index, next }`. `account` is the numeric ID; other parameters follow the fills query.
 
-`summarizeFees(account, fills)` 是不发请求的纯函数，适合对已经取得的成交记录汇总；传入的记录应去除重复页。
+`summarizeFees(account, fills)` is a pure function that makes no requests, suitable for summarizing fill records you already have; deduplicate pages before passing records in.
 
-| `summary` 字段 | 类型 | 说明 |
+| `summary` field | Type | Description |
 | --- | --- | --- |
-| `account` | `number` | 目标账户 |
-| `makerFees` / `takerFees` | `bigint` | 对应角色的有符号费用，负数为返佣 |
-| `feesPaid` | `bigint` | 正向支付费用之和 |
-| `rebates` | `bigint` | 负向费用的绝对值之和 |
-| `netFees` | `bigint` | 支付减返佣，可为负 |
-| `fillCount` | `number` | 涉及本账户的成交记录数，同条记录两侧都是本账户时计一次 |
-| `makerFillCount` / `takerFillCount` | `number` | 对应角色的记录数，自成交会同时计入两侧 |
-| `byMarket` | `MarketFeeSummary[]` | 按市场 ID 排序，每项含 market 及上述费用和计数字段 |
+| `account` | `number` | Target account |
+| `makerFees` / `takerFees` | `bigint` | Signed fees for each role; negative values are rebates |
+| `feesPaid` | `bigint` | Sum of positive fees paid |
+| `rebates` | `bigint` | Sum of absolute values of negative fees |
+| `netFees` | `bigint` | Fees paid minus rebates; may be negative |
+| `fillCount` | `number` | Number of fill records involving this account; a record where both sides are this account counts once |
+| `makerFillCount` / `takerFillCount` | `number` | Number of records per role; self-trades count toward both sides |
+| `byMarket` | `MarketFeeSummary[]` | Sorted by market ID; each item contains market plus the fee and count fields above |
 
-统计口径为成交记录中的 makerFee / takerFee，所有金额均为微 USD。`userFees()` 返回本页汇总；存在 next 时继续分页，累加各页得到所查询历史的总额。使用 index.firstHeight / indexedHeight 确认查询覆盖的高度范围。完整分页示例见 [历史与费用](reference/HISTORY.md#账户手续费与成交返佣userfees)。
+Totals are based on the makerFee / takerFee in fill records, and all amounts are in micro-USD. `userFees()` returns the summary for this page; when next is present, keep paging and add up the pages to get the total for the queried history. Use index.firstHeight / indexedHeight to confirm the height range the query covers. See [history and fees](reference/HISTORY.md#account-fees-and-fill-rebates-userfees) for a full pagination example.

@@ -1,6 +1,6 @@
 {
   "name": "@svpchain/trading-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Apollo Core TypeScript SDK: Info queries, Exchange trading, owner/agent signing and batch execution tracking",
   "license": "MIT",
   "repository": {
@@ -20,6 +20,9 @@
     "CHANGELOG.md",
     "docs",
     "examples",
+    "README.zh-CN.md",
+    "PROVENANCE.zh-CN.md",
+    "CHANGELOG.zh-CN.md",
     "LICENSE"
   ],
   "exports": {

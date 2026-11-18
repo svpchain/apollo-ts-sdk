@@ -1,12 +1,18 @@
-# 版本记录
+# Changelog
+
+English | [简体中文](CHANGELOG.zh-CN.md)
+
+## 1.0.1
+
+- Added English documentation; English is now the default. The Chinese docs moved to `README.zh-CN.md` and `docs/zh-CN/`, with a language switcher at the top of every page.
 
 ## 1.0.0
 
-首个公开版本。
+First public release.
 
-- `Info` 查询：市场、盘口、行情、账户、持仓、挂单、成交、费用汇总及历史数据。
-- `Exchange` 交易：限价、条件、市价 IOC、批量下单 / 改单 / 撤单、平仓、杠杆、逐仓保证金、TWAP、分批订单及 agent 授权。
-- 钱包回调、本地 owner key 和 agent 三种签名方式。
-- 准备与提交分离、链身份检查、执行结果跟踪及提交不确定后的对账。
-- 精确十进制换算、并发 nonce 分配、请求超时与取消。
-- ESM，附带 TypeScript 类型声明，支持 Node.js 22+ 和现代浏览器。
+- `Info` queries: markets, order book, tickers, accounts, positions, open orders, fills, fee summaries, and historical data.
+- `Exchange` trading: limit, trigger, and market IOC orders; bulk place / modify / cancel; close position; leverage; isolated margin; TWAP; scaled orders; and agent approval.
+- Three signing methods: wallet callback, local owner key, and agent.
+- Separate prepare and submit steps, chain identity checks, execution tracking, and reconciliation after an uncertain submit.
+- Exact decimal conversion, concurrent nonce allocation, request timeouts, and cancellation.
+- ESM with TypeScript type declarations; supports Node.js 22+ and modern browsers.

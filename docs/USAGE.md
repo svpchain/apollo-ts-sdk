@@ -1,8 +1,10 @@
-# 接入指南
+# Integration Guide
 
-## 1. 选择查询与交易客户端
+English | [简体中文](zh-CN/USAGE.md)
 
-`Info` 不需要私钥，可直接查询；`Exchange` 绑定一个账户和一个签名者，负责该账户的交易。
+## 1. Choose query and trading clients
+
+`Info` requires no private key and can query directly; `Exchange` is bound to one account and one signer and handles trading for that account.
 
 ```ts
 import { Info, Exchange } from '@svpchain/trading-sdk';
@@ -20,9 +22,9 @@ const exchange = new Exchange({
 });
 ```
 
-交易前确认账户存在、保证金足够、市场处于 ACTIVE 状态、agent 已获得授权。`expectedGenesisHash` 从独立可信的环境配置提供，避免连到其他链或重部署前的环境。
+Before trading, confirm that the account exists, has enough collateral, the market is ACTIVE, and the agent is approved. Provide `expectedGenesisHash` from independent, trusted environment configuration so you never connect to another chain or a pre-redeployment environment.
 
-## 2. 使用字符串传价格和数量
+## 2. Pass prices and sizes as strings
 
 ```ts
 const prepared = await exchange.prepareOrder({
@@ -31,11 +33,11 @@ const prepared = await exchange.prepareOrder({
 });
 ```
 
-高层 API 不接收 JS number，也不接收科学计数法。查询市场精度后，确保价格符合 tick，数量符合 step；不符合会在广播前报错，不会静默补成最小数量。用户输入经你自己的规则取整后，需要再次让用户或策略确认最终价格和数量。
+The high-level API accepts neither JS numbers nor scientific notation. After querying market precision, make sure the price matches tick and the size matches step; mismatches throw before broadcasting and are never silently rounded up to the minimum size. After rounding user input with your own rules, have the user or strategy confirm the final price and size again.
 
-`prepareOrder()` 只查询和签名，不广播。准备好的数据不含私钥，但包含可提交的签名交易，应按业务需要保管。
+`prepareOrder()` only queries and signs; it does not broadcast. Prepared data contains no private key, but it does contain a signed, submittable transaction, so store it as your application requires.
 
-## 3. 检查每一项交易结果
+## 3. Check every trading result
 
 ```ts
 const response = await exchange.submitPrepared([prepared]);
@@ -43,29 +45,29 @@ for (const item of response.statuses) {
   switch (item.outcome.kind) {
     case 'executed':
       if (item.outcome.ok) {
-        console.log('动作执行成功；接下来查询挂单与成交');
+        console.log('Action executed; next, query open orders and fills');
       } else {
-        console.log('执行被拒:', item.outcome.reject);
+        console.log('Execution rejected:', item.outcome.reject);
       }
       break;
     case 'pending':
-      console.log('继续查询原 nonce:', item.prepared.nonce);
+      console.log('Keep querying the original nonce:', item.prepared.nonce);
       break;
     case 'nonce_used':
-      console.log('查询 archive 交易及动作历史，核实最终结果');
+      console.log('Query archive transactions and action history to verify the final result');
       break;
     case 'not_submitted':
-      console.log('未被接收:', item.submitStatus, item.error);
+      console.log('Not accepted:', item.submitStatus, item.error);
       break;
   }
 }
 ```
 
-需要区分三件事：节点接收、动作执行、订单成交。限价下单执行成功可能只是挂入订单簿；IOC 可能没有成交，TWAP 可能只是计划建立。`response.successful()` 只检查动作是否全部执行成功。
+Distinguish three things: node acceptance, action execution, and order fills. A successfully executed limit order may only be resting on the order book; an IOC may not fill, and a TWAP may only have created its plan. `response.successful()` only checks whether all actions executed successfully.
 
-批量结果按输入顺序返回，部分被拒时其他项可能仍然执行。先逐项对账，再决定是否对明确失败的项采取下一步操作。
+Batch results are returned in input order; when some items are rejected, others may still execute. Reconcile item by item first, then decide whether to take further action on items that clearly failed.
 
-## 4. 提交不确定与查询失败
+## 4. Uncertain submits and failed queries
 
 ```ts
 import {
@@ -80,27 +82,27 @@ try {
   console.log(response.statuses);
 } catch (error) {
   if (error instanceof ExchangeSubmissionUnknownError) {
-    // 请求可能已经到达节点。使用原交易查询，不能直接换 nonce 重下。
+    // The request may already have reached the node. Query using the original transactions; do not re-place with a new nonce.
     const statuses = await exchange.info.actionStatus(
       error.prepared.map(p => ({ account: p.account, nonce: p.nonce })),
     );
     console.log(statuses);
   } else if (error instanceof ExchangeTrackingError) {
-    // error.response 保留已接收证据及部分已确认结果。
+    // error.response keeps the acceptance evidence and any partially confirmed results.
     console.log(error.response.statuses);
   } else if (error instanceof ActionAllowanceError) {
-    console.log('账户动作额度不足:', error.used, error.limit, error.required);
+    console.log('Insufficient account action allowance:', error.used, error.limit, error.required);
   } else {
     throw error;
   }
 }
 ```
 
-恢复查询每次最多 10,000 个键；更大的批次应分组。`NOT_FOUND` 只能表示当前没查到，不能直接证明原交易从未被接收；可能存在执行延迟、结果缓存范围或索引延迟。`nonce_used` 同样不能视为成功，应查 archive 的交易和动作历史。
+Recovery queries accept at most 10,000 keys per call; split larger batches into groups. `NOT_FOUND` only means nothing was found right now; it does not prove the original transaction was never accepted, since execution delay, result-cache range, or index lag may be involved. Likewise, `nonce_used` must not be treated as success; check archive transactions and action history.
 
-SDK 不自动重发 Submit。它也不会在响应丢失后自动换 nonce 创建另一笔交易。准备好的签名可供业务恢复流程使用，提交前仍会核对账户、当前签名授权和链身份。
+The SDK never resends Submit automatically. Nor does it create another transaction with a new nonce after a lost response. Prepared signatures are available to your recovery flow, and account, current signing authorization, and chain identity are still checked before submit.
 
-## 5. 超时与取消
+## 5. Timeouts and cancellation
 
 ```ts
 const controller = new AbortController();
@@ -114,45 +116,45 @@ const response = await exchange.order(
 );
 ```
 
-单次 RPC 默认超时 10 秒，接收后的执行等待默认 15 秒。显式传 `timeoutMs` 时也用于提交请求；执行等待另起同样长度的总期限。内部轮询分组共用执行等待期限。
+A single RPC times out after 10 seconds by default, and the execution wait after acceptance defaults to 15 seconds. An explicit `timeoutMs` also applies to the submit request; the execution wait then gets a separate total deadline of the same length. Internal polling groups share the execution wait deadline.
 
-执行等待正常到期会返回仍为 `pending` 的项，保留已确认项；接收后的查询失败或调用方主动取消，会抛出 `ExchangeTrackingError`。取消本地等待不会撤回链上交易。
+When the execution wait expires normally, items still `pending` are returned and confirmed items are kept; if a query after acceptance fails or the caller cancels, `ExchangeTrackingError` is thrown. Cancelling the local wait does not withdraw the on-chain transaction.
 
-不等待执行可传 `{ waitForExecution: false }`，此时 `accepted` 项的 outcome 为 `pending`；你的业务需要后续查询确认。
+To skip waiting for execution, pass `{ waitForExecution: false }`; `accepted` items then have a `pending` outcome, and your application needs to confirm them with later queries.
 
-## 6. 多实例共享 nonce
+## 6. Sharing nonces across instances
 
 ```ts
 import { NonceAllocator, Exchange } from '@svpchain/trading-sdk';
 
-const shared = new NonceAllocator({ namespace: 'my-app-devnet' });
+const shared = new NonceAllocator({ namespace: 'my-app' });
 const options = { baseUrl, account, expectedGenesisHash, nonceManager: shared };
 const first = new Exchange({ ...options, signer: { type: 'agent', seed: firstSeed, slot: 1 } });
 const second = new Exchange({ ...options, signer: { type: 'agent', seed: secondSeed, slot: 2 } });
 ```
 
-同一网络、同一账户的 owner 与所有 agent 共用 nonce 空间。同一实例会复用其分配器，多个实例需显式共享；不要因为切换 agent 就换一套互不协调的 nonce。
+On the same network, the owner and all agents of an account share a single nonce space. A single instance reuses its allocator; multiple instances must share one explicitly. Do not switch to an uncoordinated set of nonces just because you switch agents.
 
-默认分配器只协调当前 JS 实例，不提供跨进程或跨浏览器标签页的互斥保证。多进程部署应实现 `NonceManager` 的 `next(account)` 和 `syncFromChain(account, lastNonce)`，使用外部原子协调；不同网络使用不同命名空间。
+The default allocator only coordinates within the current JS instance and provides no mutual exclusion across processes or browser tabs. Multi-process deployments should implement `next(account)` and `syncFromChain(account, lastNonce)` of `NonceManager` with external atomic coordination, and use different namespaces for different networks.
 
-链的 nonce 乱序窗口为 16，唯一分配不能保证无限并发乱序仍可接收。需要先授权再下单、先改单再依赖新单等场景，等待前一步确认后再继续。控制同账户并发，优先使用不同账户分摊吞吐。
+The chain's out-of-order nonce window is 16, so unique allocation alone cannot guarantee that unlimited concurrent out-of-order submissions are accepted. For flows such as approving before placing orders, or modifying an order and then depending on the new order, wait for the previous step to be confirmed before continuing. Limit concurrency per account, and prefer spreading throughput across different accounts.
 
-## 7. 批量大小与额度
+## 7. Batch size and allowance
 
-`bulkOrders()`、`bulkCancel()` 和 `executeActions()` 每次最多 20,000 项，提交前会验证整批输入并准备所有签名，再发送一次提交请求；不保证整批原子执行。
+`bulkOrders()`, `bulkCancel()`, and `executeActions()` accept at most 20,000 items per call. Before submitting, they validate the whole batch and prepare all signatures, then send a single submit request; batches are not guaranteed to execute atomically.
 
-请求还有字节限制。SDK 默认上限 8 MiB，节点和代理可能更小。应按实际环境设置 `maxRequestBytes` 并控制批次大小，不要直接将 20,000 项当作建议批量。大批次的前置查询、签名和执行等待也会占用时间。
+Requests also have a byte limit. The SDK defaults to 8 MiB, and nodes and proxies may be stricter. Set `maxRequestBytes` for your actual environment and control batch size; do not treat 20,000 items as a recommended batch size. Pre-queries, signing, and execution waits for large batches also take time.
 
-`userRateLimit(account)` 返回账户累计动作额度；这与 HTTP 每秒限流、gas、钱包 SVP 余额是不同概念。owner 与 agent 共享额度，充值和更换签名 key 不会重置。Cancel / CancelAll 免额度，新 Exchange 在准备其他动作前检查剩余额度；并发提交仍可能在检查后耗尽，需要处理链上最终拒绝。
+`userRateLimit(account)` returns the account's cumulative action allowance; this is distinct from HTTP per-second rate limits, gas, and wallet SVP balance. The owner and agents share the allowance, and neither deposits nor signing key rotation reset it. Cancel / CancelAll are exempt; a new Exchange checks the remaining allowance before preparing other actions. Concurrent submits may still exhaust it after the check, so handle final on-chain rejections.
 
-## 8. 钱包与密钥
+## 8. Wallets and keys
 
-Web 应用优先通过钱包回调创建 owner signer，批准专门的 agent；不要把 owner 私钥放进前端包。agent seed 也具备交易权限，不能写入源码、日志或提交到仓库。
+Web apps should create the owner signer via a wallet callback and approve a dedicated agent; never put the owner private key in a frontend bundle. Agent seeds also carry trading authority and must not be written into source code, logs, or committed to a repository.
 
-`createOwnerKeySigner()` 适合受控 Node.js 服务。SDK 会复制传入 key / seed，调用方后续修改原数组不会切换签名身份。agent 被换 key、撤销或过期后应重新确认授权；已准备交易可能不再有效。
+`createOwnerKeySigner()` is suited to controlled Node.js services. The SDK copies the key / seed you pass in, so later changes to the original array do not switch the signing identity. After an agent's key is rotated, revoked, or expires, re-confirm the authorization; prepared transactions may no longer be valid.
 
-## 9. 最小接入验证
+## 9. Minimal integration check
 
-先在测试环境用专门账户完成授权、下单、查挂单、撤单、成交与仓位核对，再进入持续交易。仓库自动测试使用模拟链服务，不能代替你的目标环境验证。
+First, in a test environment with a dedicated account, complete approval, placing an order, querying open orders, cancelling, and checking fills and positions, before moving on to continuous trading. The repository's automated tests use a mock chain service and cannot replace verification against your target environment.
 
-查询方法见 [Info 方法](API.md)。
+See [Info methods](API.md) for query methods.

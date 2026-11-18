@@ -1,29 +1,31 @@
-# 交易结果与异常
+# Trading Results and Errors
 
-交易接入需要分别确认节点接收、动作执行和订单成交。SDK 的返回值保留这三个阶段的边界，应用可据此更新界面、处理拒绝和恢复交易。
+English | [简体中文](../zh-CN/reference/RESULTS.md)
 
-## 交易方法返回什么
+Trading integrations need to confirm node acceptance, action execution, and order fills separately. The SDK's return values preserve the boundaries between these three stages, so applications can update their UI, handle rejections, and recover transactions accordingly.
 
-`order()`、`cancel()`、`modifyOrder()` 等方法统一返回 `OrderResponse`。单笔也使用 `statuses` 数组，便于与批量复用处理逻辑。
+## What trading methods return
 
-| 返回字段 | 类型 | 含义 |
+Methods such as `order()`, `cancel()`, and `modifyOrder()` all return an `OrderResponse`. Single operations also use a `statuses` array, so the same handling logic works for batches.
+
+| Returned field | Type | Meaning |
 | --- | --- | --- |
-| `id` | `bigint` | 本次提交批次 ID |
-| `statuses` | `OrderStatus[]` | 按输入顺序返回的逐项结果 |
-| `submit` | `SubmitResult` | 节点接收结果 |
-| `successful()` | 方法，返回 boolean | 仅当全部项已执行且执行成功时为 true |
+| `id` | `bigint` | ID of this submit batch |
+| `statuses` | `OrderStatus[]` | Per-item results in input order |
+| `submit` | `SubmitResult` | Node acceptance result |
+| `successful()` | Method returning boolean | true only when every item has executed and executed successfully |
 
-每个 `OrderStatus` 包含：
+Each `OrderStatus` contains:
 
-| 字段 | 含义 |
+| Field | Meaning |
 | --- | --- |
-| `prepared.account` / `prepared.nonce` | 原动作的对账键 |
-| `prepared.transactionHash` | 原交易哈希 |
-| `submitStatus` | 节点接收或明确拒绝状态 |
-| `outcome` | 动作执行情况 |
-| `error` | 存在时提供接收或执行失败原因 |
+| `prepared.account` / `prepared.nonce` | Reconciliation key of the original action |
+| `prepared.transactionHash` | Original transaction hash |
+| `submitStatus` | Node acceptance or explicit rejection status |
+| `outcome` | Action execution status |
+| `error` | When present, the reason for acceptance or execution failure |
 
-以下例子把返回值映射为便于应用保存的摘要，`bigint` 转成字符串后可以 JSON 序列化：
+The following example maps the return value to a summary that is easy for applications to store; after converting `bigint` to string, it can be JSON-serialized:
 
 ```ts
 const response = await exchange.order({
@@ -41,36 +43,36 @@ const summary = response.statuses.map(item => ({
 console.log(summary);
 ```
 
-摘要中的 `ok: true` 只表示动作成功，不表示订单已成交。
+`ok: true` in the summary only means the action succeeded, not that the order was filled.
 
-## 节点接收状态
+## Node acceptance status
 
-| `submitStatus` | 含义 | 业务处理 |
+| `submitStatus` | Meaning | Handling |
 | --- | --- | --- |
-| `accepted` | 节点接收此项 | 继续确认执行结果 |
-| `malformed` | 节点明确拒绝，数据不符合要求 | 检查参数和版本 |
-| `bad_signature` | 节点明确拒绝签名或授权校验 | 刷新账户、agent 和 nonce 状态 |
-| `unavailable` | 节点明确未接收此项 | 检查服务状态并根据业务决定下一步 |
+| `accepted` | The node accepted this item | Continue to confirm the execution result |
+| `malformed` | The node explicitly rejected it; the data does not meet requirements | Check parameters and version |
+| `bad_signature` | The node explicitly rejected the signature or authorization check | Refresh account, agent, and nonce state |
+| `unavailable` | The node explicitly did not accept this item | Check service status and decide the next step for your application |
 
-批量可能混合接收与拒绝。`submit.ok` 只表示各项都被接收；最终执行仍需逐项判断。
+A batch may mix accepted and rejected items. `submit.ok` only means every item was accepted; final execution must still be checked per item.
 
-## 动作执行状态
+## Action execution status
 
-| `outcome.kind` | 其他字段 | 含义 |
+| `outcome.kind` | Other fields | Meaning |
 | --- | --- | --- |
-| `executed` | `ok: true`、height、可选 orderId、fills | 动作执行成功 |
-| `executed` | `ok: false`、reject | 动作执行被拒 |
-| `pending` | — | 本次没有得到最终执行详情 |
-| `nonce_used` | — | nonce 已使用，但没有可用执行详情 |
-| `not_submitted` | — | 节点明确未接收此项 |
+| `executed` | `ok: true`, height, optional orderId, fills | Action executed successfully |
+| `executed` | `ok: false`, reject | Action execution was rejected |
+| `pending` | — | No final execution details were obtained this time |
+| `nonce_used` | — | The nonce has been used, but no execution details are available |
+| `not_submitted` | — | The node explicitly did not accept this item |
 
-`fills` 是该动作直接产生的成交条目数，不是逐笔成交明细，也不能单独确定全部委托数量已成交。完整成交用 `userFills()`，剩余挂单用 `openOrders()`。
+`fills` is the number of fill entries produced directly by the action, not per-fill details, and it alone cannot determine whether the full order size was filled. Use `userFills()` for complete fills and `openOrders()` for remaining open orders.
 
-常见情况：限价动作成功但仍在挂单；IOC 动作成功但未成交或部分成交；TWAP 动作成功但计划仍在后续执行。应用应根据实际成交和持仓更新业务状态。
+Common cases: a limit action succeeds but the order is still open; an IOC action succeeds but fills partially or not at all; a TWAP action succeeds but the plan is still executing. Applications should update their state based on actual fills and positions.
 
-## 查询原动作：actionStatus
+## Query the original action: actionStatus
 
-**用途**：下单后继续等待确认，或提交结果不确定时对账。
+**Purpose**: keep waiting for confirmation after placing an order, or reconcile when the submit result is uncertain.
 
 ```ts
 const item = response.statuses[0];
@@ -80,24 +82,24 @@ const status = await info.actionStatus([
 console.log(status.statuses);
 ```
 
-每次接收 1–10,000 个 `{ account: number, nonce: bigint }`，返回按键对应的原始执行状态。枚举类型为 `@svpchain/trading-sdk/protocol` 的 `tx.ActionState`。
+Each call accepts 1–10,000 `{ account: number, nonce: bigint }` items and returns the raw execution status for each key. The enum type is `tx.ActionState` from `@svpchain/trading-sdk/protocol`.
 
-`NOT_FOUND` 表示当前查询没有执行详情，不能证明交易从未接收。`NONCE_USED` 也不是执行成功的同义词。结合 [历史索引范围](HISTORY.md#索引状态indexstatus) 和原交易继续核查。
+`NOT_FOUND` means the current query has no execution details; it does not prove the transaction was never accepted. `NONCE_USED` is not a synonym for successful execution either. Keep checking with the [history index range](HISTORY.md#index-status-indexstatus) and the original transaction.
 
-## 查询交易：transaction
+## Query a transaction: transaction
 
-**用途**：按交易哈希核查节点记录。
+**Purpose**: check the node's record by transaction hash.
 
 ```ts
 const transaction = await info.transaction(response.statuses[0].prepared.transactionHash);
 console.log(transaction);
 ```
 
-参数为 32 字节 `Uint8Array` 或 `0x` 字符串。SDK 核对返回哈希；目标节点能否找到记录取决于保存范围、执行及索引进度。交易未找到时，保留原 account / nonce 继续核查，不要自动生成另一笔订单。
+The parameter is a 32-byte `Uint8Array` or a `0x` string. The SDK verifies the returned hash; whether the target node can find the record depends on its retention range and execution and indexing progress. If the transaction is not found, keep the original account / nonce for further checks, and do not automatically create another order.
 
-## 等待与超时
+## Waiting and timeouts
 
-默认等待执行最多 15 秒、每 250 毫秒查询一次。可以传 `{ waitForExecution: false }` 只等提交响应；此时 accepted 项仍为 pending。
+By default the SDK waits up to 15 seconds for execution, querying every 250 ms. Pass `{ waitForExecution: false }` to wait only for the submit response; accepted items then remain pending.
 
 ```ts
 const response = await exchange.order(
@@ -107,18 +109,18 @@ const response = await exchange.order(
 console.log(response.statuses);
 ```
 
-执行等待正常到期会返回仍为 pending 的项，已经确认的项会保留。取消本地等待不会撤回已经接收的交易。超时选项和取消方式见 [接入指南](../USAGE.md#5-超时与取消)。
+When the execution wait expires normally, items still pending are returned and confirmed items are kept. Cancelling the local wait does not withdraw transactions that were already accepted. See the [integration guide](../USAGE.md#5-timeouts-and-cancellation) for timeout options and cancellation.
 
-## 异常与恢复
+## Errors and recovery
 
-| 异常 | SDK 保留的内容 | 下一步 |
+| Error | What the SDK keeps | Next step |
 | --- | --- | --- |
-| `ExchangeSubmissionUnknownError` | 原始 `prepared[]` | 提交响应丢失或无法信任，查原 account / nonce 和交易哈希 |
-| `ExchangeTrackingError` | `response`，含接收证据和部分结果 | 保留已确认结果，继续查询未确认项 |
-| `ActionAllowanceError` | used、limit、required | 额度不足，停止重复提交 |
-| `ChainIdentityError` | 错误原因 | 核对网络和目标创世哈希 |
-| `ConnectError` | RPC code 和消息 | 结合发生阶段处理；提交阶段的不确定结果会被专门异常封装 |
-| `TypeError` / `RangeError` | 校验原因 | 检查精度、参数、签名或数据一致性 |
+| `ExchangeSubmissionUnknownError` | Original `prepared[]` | The submit response was lost or cannot be trusted; query the original account / nonce and transaction hash |
+| `ExchangeTrackingError` | `response`, with acceptance evidence and partial results | Keep confirmed results and continue querying unconfirmed items |
+| `ActionAllowanceError` | used, limit, required | Insufficient allowance; stop repeated submits |
+| `ChainIdentityError` | Error reason | Check the network and the target genesis hash |
+| `ConnectError` | RPC code and message | Handle based on the stage where it occurred; uncertain results during submit are wrapped in a dedicated error |
+| `TypeError` / `RangeError` | Validation reason | Check precision, parameters, signature, or data consistency |
 
 ```ts
 import { ExchangeSubmissionUnknownError, ExchangeTrackingError } from '@svpchain/trading-sdk';
@@ -130,7 +132,7 @@ try {
   console.log(response.statuses);
 } catch (error) {
   if (error instanceof ExchangeSubmissionUnknownError) {
-    // 大批次分组，每次 actionStatus 最多 10,000 项。
+    // Split large batches into groups; each actionStatus call accepts at most 10,000 items.
     for (let i = 0; i < error.prepared.length; i += 10000) {
       const keys = error.prepared.slice(i, i + 10000)
         .map(p => ({ account: p.account, nonce: p.nonce }));
@@ -144,4 +146,4 @@ try {
 }
 ```
 
-SDK 不自动重发 Submit，也不会自动换 nonce 再下单。恢复流程先核实原请求；批量部分成功时仅对明确需要后续操作的项处理，避免重复交易。
+The SDK never resends Submit automatically, nor does it place the order again with a new nonce. A recovery flow should first verify the original request; when a batch partially succeeds, act only on items that clearly need follow-up, to avoid duplicate trades.

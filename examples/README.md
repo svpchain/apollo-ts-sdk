@@ -1,6 +1,8 @@
-# 命令行示例
+# Command-Line Examples
 
-示例直接调用 SDK。先在 SDK 仓库安装依赖并编译：
+English | [简体中文](README.zh-CN.md)
+
+The examples call the SDK directly. First install dependencies and build in the SDK repository:
 
 ```bash
 npm ci
@@ -8,44 +10,44 @@ npm run build
 npm run examples:build
 ```
 
-使用 Node.js 22 及以上。环境变量由调用方通过 shell 或本地配置文件提供，脚本不会自动加载或输出密钥。
+Use Node.js 22 or later. Environment variables are provided by the caller via the shell or a local config file; the scripts never load or print keys automatically.
 
-## 配置
+## Configuration
 
-| 环境变量 | 用途 |
+| Environment variable | Purpose |
 | --- | --- |
-| `APOLLO_RPC_URL` | Apollo HTTP(S) JSON-RPC 地址 |
-| `APOLLO_ACCOUNT` | 非零账户数字 ID，账户查询和交易使用 |
-| `APOLLO_GENESIS_HASH` | 可信创世哈希，签名交易必填，查询时也可设置以核对目标链 |
-| `APOLLO_AGENT_SEED` | 已由账户 owner 授权的 32 字节 agent seed 十六进制 |
-| `APOLLO_AGENT_SLOT` | 撤单 / 改单工具中的 agent 槽位，默认 1；普通 order.js 示例固定槽位 1 |
-| `APOLLO_COIN` | 市场完整 ticker；查询挂单不传则查全部市场 |
-| `APOLLO_PRICE` / `APOLLO_SIZE` | 价格和基础币数量的十进制字符串 |
-| `APOLLO_ORDER_ID` | 目标订单 ID 的十进制数字字符串，不带末尾的 n |
+| `APOLLO_RPC_URL` | Apollo HTTP(S) JSON-RPC endpoint |
+| `APOLLO_ACCOUNT` | Non-zero numeric account ID, used for account queries and trading |
+| `APOLLO_GENESIS_HASH` | Trusted genesis hash; required for signed transactions, and can also be set for queries to verify the target chain |
+| `APOLLO_AGENT_SEED` | Hex-encoded 32-byte agent seed, already approved by the account owner |
+| `APOLLO_AGENT_SLOT` | Agent slot for the cancel / modify tools, default 1; the basic order.js example always uses slot 1 |
+| `APOLLO_COIN` | Full market ticker; when omitted, open-order queries cover all markets |
+| `APOLLO_PRICE` / `APOLLO_SIZE` | Price and base-asset size as decimal strings |
+| `APOLLO_ORDER_ID` | Target order ID as a decimal digit string, without a trailing n |
 
-价格、数量需要满足目标市场的 tick / step。配置文件包含密钥时仅在本地保管；仓库忽略 `.env.*` 文件。
+Prices and sizes must match the target market's tick / step. Keep config files that contain keys local only; the repository ignores `.env.*` files.
 
-## 查询链和市场
+## Query the chain and markets
 
 ```bash
 node .examples-dist/query.js
 ```
 
-只需要 APOLLO_RPC_URL，返回链身份和市场列表。
+Requires only APOLLO_RPC_URL. Returns the chain identity and the market list.
 
-## 下单
+## Place an order
 
 ```bash
-# 准备并签名，不广播
+# Prepare and sign, without broadcasting
 node .examples-dist/order.js
 
-# 真实提交一笔 Gtc 限价买单
+# Actually submit a Gtc limit buy order
 node .examples-dist/order.js --submit
 ```
 
-设置 RPC、账户、可信创世哈希、agent seed、市场、价格和数量。示例固定使用槽位 1。每次运行会重新准备交易并分配 nonce；保存真实提交那次输出的订单 ID 和交易哈希。
+Set the RPC endpoint, account, trusted genesis hash, agent seed, market, price, and size. The example always uses slot 1. Each run prepares a new transaction and allocates a new nonce; save the order ID and transaction hash printed by the run that actually submitted.
 
-## 查询挂单
+## Query open orders
 
 ```bash
 npm run example:orders
@@ -53,49 +55,49 @@ npm run example:orders -- --coin BTC-USD
 npm run example:orders -- --order-id "$APOLLO_ORDER_ID"
 ```
 
-需要 RPC 和账户 ID，不需要 agent seed。可按完整 ticker 和订单 ID 筛选，命令行参数优先于同名环境配置。结果显示订单 ID、市场、方向、价格、剩余数量和持仓槽位。
+Requires the RPC endpoint and account ID, but no agent seed. You can filter by full ticker and order ID; command-line arguments take precedence over the matching environment settings. Results show the order ID, market, side, price, remaining size, and position slot.
 
-查询不到挂单时，结合动作执行和成交记录判断最终状态。
+If an order is not found among open orders, determine its final status from action execution and fill records.
 
-## 撤销指定订单
+## Cancel a specific order
 
 ```bash
-# 只准备撤单签名
+# Only prepare the cancellation signature
 npm run example:cancel -- --order-id "$APOLLO_ORDER_ID"
 
-# 真实发送撤单
+# Actually send the cancellation
 npm run example:cancel -- --order-id "$APOLLO_ORDER_ID" --submit
 ```
 
-市场来自 APOLLO_COIN，也可以传 --coin。脚本只处理指定账户、市场和订单 ID，默认不广播。需要设置有效的 agent 和创世哈希。
+The market comes from APOLLO_COIN, or you can pass --coin. The script only acts on the specified account, market, and order ID, and does not broadcast by default. A valid agent and genesis hash are required.
 
-执行成功后会重新查询挂单，输出 `Still open after cancellation: false`。输出中另一个 nonce 属于撤单动作，目标订单 ID 保持不变。
+After successful execution it queries open orders again and prints `Still open after cancellation: false`. The separate nonce in the output belongs to the cancel action; the target order ID stays the same.
 
-## 修改指定订单
+## Modify a specific order
 
 ```bash
-# 准备修改后的价格与数量
+# Prepare the modified price and size
 npm run example:modify -- --order-id "$APOLLO_ORDER_ID" --price 65100 --size 0.001
 
-# 真实提交修改
+# Actually submit the modification
 npm run example:modify -- --order-id "$APOLLO_ORDER_ID" --price 65100 --size 0.001 --submit
 ```
 
-Price / Size 参数也可来自环境变量，命令行优先。修改先撤旧单再建新单，替换成功后使用新订单 ID；即使替换失败，旧单也可能已经撤销。
+Price / Size can also come from environment variables; the command line takes precedence. Modifying cancels the old order and then creates a new one; after a successful replacement, use the new order ID. Even if the replacement fails, the old order may already be cancelled.
 
-## 结果和异常
+## Results and errors
 
-接收、执行和成交分别判断。accepted 表示节点接收；executed 且 ok=true 表示动作执行成功，实际成交仍需查询。
+Acceptance, execution, and fills are checked separately. accepted means the node accepted the item; executed with ok=true means the action executed successfully, and actual fills still need to be queried.
 
-未确认成功时，撤单 / 改单脚本以非零状态退出并保留对账标识。提交结果不确定或查询中断时，先核查原 account / nonce，避免直接重发。脚本不自动重试提交。
+If success is not confirmed, the cancel / modify scripts exit with a non-zero status and keep the reconciliation identifiers. If the submit result is uncertain or a query is interrupted, first check the original account / nonce instead of resending directly. The scripts never retry submits automatically.
 
-## 帮助和验证
+## Help and verification
 
 ```bash
 npm run example:orders -- --help
 npm run example:cancel -- --help
 npm run example:modify -- --help
 
-# 本地模拟节点验证，不使用真实账户或发送链上交易
+# Verify against a local mock node, without using a real account or sending on-chain transactions
 npm run test:examples
 ```

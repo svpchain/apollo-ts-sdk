@@ -1,6 +1,8 @@
-# 交易接口
+# Trading APIs
 
-`Exchange` 绑定一个 Apollo 账户和一个 signer，负责准备、签名、提交及查询动作执行结果。下面示例使用已授权 agent 的 `exchange`；owner 授权操作使用 `owner`。
+English | [简体中文](../zh-CN/reference/EXCHANGE.md)
+
+`Exchange` is bound to one Apollo account and one signer, and handles preparing, signing, submitting, and querying action execution results. The examples below use an `exchange` with an approved agent; owner authorization operations use `owner`.
 
 ```ts
 import { Exchange } from '@svpchain/trading-sdk';
@@ -11,26 +13,26 @@ const exchange = new Exchange({
 });
 ```
 
-所有交易方法返回 `OrderResponse`。每一项必须区分节点接收、动作执行和订单成交，详见 [结果处理](RESULTS.md)。第二个参数一般可传 `{ waitForExecution, timeoutMs, intervalMs, signal }`，具体位置见 [API](../API.md)。
+All trading methods return an `OrderResponse`. For each item you must distinguish node acceptance, action execution, and order fills; see [result handling](RESULTS.md). The second argument generally accepts `{ waitForExecution, timeoutMs, intervalMs, signal }`; see [API](../API.md) for the exact position.
 
-## 限价下单：order
+## Limit orders: order
 
-**用途**：按指定价格和数量下单，选择长期挂单、立即成交剩余撤销或只挂单。
+**Purpose**: place an order at a given price and size, choosing a resting order, immediate-or-cancel, or post-only.
 
 ```text
 exchange.order(request, options?)
 ```
 
-| 参数 | 类型 | 说明 |
+| Parameter | Type | Description |
 | --- | --- | --- |
-| `coin` | `string` | 完整市场 ticker |
-| `isBuy` | `boolean` | 买入为 true，卖出为 false |
-| `price` | `string` | 限价，符合 tick |
-| `size` | `string` | 基础币数量，符合 step |
-| `orderType.limit.tif` | `Gtc` / `Ioc` / `PostOnly` | 默认 Gtc |
-| `position` | `Long` / `Short` | 多空槽位，买入默认 Long、卖出默认 Short |
-| `reduceOnly` | `boolean` | 是否只减仓，默认 false |
-| `isolated` | `boolean` | 是否逐仓，默认 false |
+| `coin` | `string` | Full market ticker |
+| `isBuy` | `boolean` | true to buy, false to sell |
+| `price` | `string` | Limit price, matching tick |
+| `size` | `string` | Base-asset size, matching step |
+| `orderType.limit.tif` | `Gtc` / `Ioc` / `PostOnly` | Default Gtc |
+| `position` | `Long` / `Short` | Long/short slot; buys default to Long, sells to Short |
+| `reduceOnly` | `boolean` | Whether reduce-only, default false |
+| `isolated` | `boolean` | Whether isolated margin, default false |
 
 ```ts
 const response = await exchange.order({
@@ -41,13 +43,13 @@ const status = response.statuses[0];
 console.log(status.submitStatus, status.outcome);
 ```
 
-**返回**：一项结果，包含原交易标识、接收状态和执行状态。执行成功时订单可能仍挂在盘口中，后续使用 `openOrders()` 和 `userFills()` 查询。
+**Returns**: one result containing the original transaction identifiers, acceptance status, and execution status. On successful execution the order may still be resting on the order book; query it afterwards with `openOrders()` and `userFills()`.
 
-**限制**：市场必须启用；价格和数量传十进制字符串，偏离 tick / step 会在广播前报错。可选 builder、截止高度等完整参数见 [API](../API.md#下单order--bulkorders)。
+**Limits**: the market must be active; pass price and size as decimal strings, and deviations from tick / step throw before broadcasting. See [API](../API.md#place-orders-order--bulkorders) for the full parameters, including optional builder and expiry height.
 
-## 批量下单：bulkOrders
+## Bulk orders: bulkOrders
 
-**用途**：一次提交多笔独立委托。
+**Purpose**: submit multiple independent orders at once.
 
 ```ts
 const response = await exchange.bulkOrders([
@@ -57,13 +59,13 @@ const response = await exchange.bulkOrders([
 for (const status of response.statuses) console.log(status.submitStatus, status.outcome);
 ```
 
-参数为 `CreateOrderRequest[]`，返回 `statuses` 与输入顺序对应。1–20,000 项还需满足请求字节上限；不会自动拆分成多次提交。
+The parameter is `CreateOrderRequest[]`, and the returned `statuses` follow the input order. 1–20,000 items, also subject to the request byte limit; batches are not automatically split into multiple submits.
 
-准备阶段检查整批订单字段，再签名和提交。链上结果仍可能部分成功、部分失败，批量不保证原子执行。不要在部分失败后重下整批订单。
+The prepare step validates the fields of the whole batch, then signs and submits. On-chain results may still be partially successful, and batches are not guaranteed to execute atomically. Do not re-place the whole batch after a partial failure.
 
-## 市价开仓和平仓：marketOpen / marketClose
+## Market open and close: marketOpen / marketClose
 
-**用途**：按当前市场价格立即尝试成交，同时限制可接受滑点。
+**Purpose**: try to fill immediately at the current market price while limiting acceptable slippage.
 
 ```ts
 const opened = await exchange.marketOpen({
@@ -75,22 +77,22 @@ const closed = await exchange.marketClose({
 console.log(opened.statuses, closed.statuses);
 ```
 
-| 参数 | 说明 |
+| Parameter | Description |
 | --- | --- |
-| `coin`、`size` | 市场和基础币数量，必填 |
-| `isBuy` | 开仓方法必填；平仓方法自动确定方向 |
-| `position` | 平仓必填 Long / Short；开仓可选 |
-| `slippage` | 比例字符串，默认 `'0.01'`，允许 0，必须小于 1 |
-| `referencePrice` | 可选参考价字符串；不传则读对手盘最佳价，空盘口回退 mark |
-| `isolated` | 可选逐仓标记 |
+| `coin`, `size` | Market and base-asset size, required |
+| `isBuy` | Required for the open method; the close method determines the side automatically |
+| `position` | Long / Short, required for close; optional for open |
+| `slippage` | Ratio string, default `'0.01'`; 0 is allowed, must be less than 1 |
+| `referencePrice` | Optional reference price string; if omitted, the best opposite-side price is used, falling back to mark for an empty order book |
+| `isolated` | Optional isolated margin flag |
 
-**返回**：动作执行结果。执行成功不能保证全部数量成交，应查询实际成交量和剩余仓位。
+**Returns**: action execution results. Successful execution does not guarantee the full size was filled; query actual filled size and remaining position.
 
-**限制**：市价意图通过 IOC 保护限价实现。平仓强制只减仓，并需要调用方提供数量；不会自动猜测多空仓位或读取全仓数量。参考价不足或风控不满足时仍可能被拒。
+**Limits**: market intents are implemented as IOC orders with a protective limit price. Closing forces reduce-only and requires the caller to provide a size; the SDK does not guess the long/short position or read the full position size. Orders may still be rejected if the reference price is insufficient or risk checks are not met.
 
-## 止盈止损：orderType.trigger
+## Take profit and stop loss: orderType.trigger
 
-**用途**：价格达到触发条件后提交限价或市价意图。
+**Purpose**: submit a limit or market intent once the price reaches a trigger condition.
 
 ```ts
 const stop = await exchange.order({
@@ -104,19 +106,19 @@ const stop = await exchange.order({
 console.log(stop.statuses);
 ```
 
-| 参数 | 说明 |
+| Parameter | Description |
 | --- | --- |
-| `triggerPrice` | 触发价字符串，必须符合 tick |
-| `tpsl` | `tp` 止盈，`sl` 止损 |
-| `isMarket` | true 为触发市价意图，false 为触发限价 |
-| `price` | 触发限价时必填，表示触发后的委托价格 |
-| `position`、`reduceOnly` | 用于平仓止盈止损时应显式指定 |
+| `triggerPrice` | Trigger price string; must match tick |
+| `tpsl` | `tp` take profit, `sl` stop loss |
+| `isMarket` | true for a trigger market intent, false for a trigger limit |
+| `price` | Required for trigger limit; the order price after triggering |
+| `position`, `reduceOnly` | Specify explicitly for take profit / stop loss that closes a position |
 
-**返回**：触发订单动作的结果。创建成功不表示已经触发或成交，也不保证止盈止损在市场剧烈变化时全部成交。每个触发订单分别返回自己的交易标识和执行结果。
+**Returns**: the result of the trigger order action. Successful creation does not mean the order has triggered or filled, nor does it guarantee that take profit / stop loss fills completely during sharp market moves. Each trigger order returns its own transaction identifiers and execution result.
 
-## 撤单：cancel / bulkCancel / cancelAll
+## Cancel orders: cancel / bulkCancel / cancelAll
 
-**用途**：撤销一个、多个、某市场全部或账户全部挂单。
+**Purpose**: cancel one order, multiple orders, all open orders in a market, or all open orders of the account.
 
 ```ts
 const one = await exchange.cancel({ coin: 'BTC-USD', orderId });
@@ -125,17 +127,17 @@ const multiple = await exchange.bulkCancel([
   { coin: 'BTC-USD', orderId: secondOrderId },
 ]);
 const marketOrders = await exchange.cancelAll('BTC-USD');
-// 所有市场：await exchange.cancelAll('');
+// All markets: await exchange.cancelAll('');
 console.log(one.statuses, multiple.statuses, marketOrders.statuses);
 ```
 
-`orderId` 是 `bigint`。`bulkCancel()` 接收 1–20,000 个 `{ coin, orderId }`，并受请求大小限制。`cancelAll()` 默认空字符串，代表所有市场。
+`orderId` is a `bigint`. `bulkCancel()` accepts 1–20,000 `{ coin, orderId }` items and is subject to the request size limit. `cancelAll()` defaults to an empty string, meaning all markets.
 
-**返回**：每个撤单动作的执行结果。撤单与成交可能竞争；撤单后仍应核对成交及挂单。Cancel / CancelAll 免累计动作额度，但参数、授权和 nonce 仍需有效。
+**Returns**: the execution result of each cancel action. Cancels can race with fills; after cancelling, still verify fills and open orders. Cancel / CancelAll are exempt from the cumulative action allowance, but parameters, authorization, and nonce must still be valid.
 
-## 改单：modifyOrder
+## Modify orders: modifyOrder
 
-**用途**：替换已有订单的价格和数量。
+**Purpose**: replace the price and size of an existing order.
 
 ```ts
 const response = await exchange.modifyOrder({
@@ -144,13 +146,13 @@ const response = await exchange.modifyOrder({
 console.log(response.statuses);
 ```
 
-请求必填 `coin`、`orderId: bigint`、`price: string`、`size: string`。price / size 仍需符合市场精度。
+The request requires `coin`, `orderId: bigint`, `price: string`, and `size: string`. price / size must still match market precision.
 
-**返回**：改单动作执行结果。新订单使用新标识，应按结果及挂单查询确认，不应一直沿用旧 ID。
+**Returns**: the execution result of the modify action. The new order has a new identifier; confirm it from the result and an open-orders query, and do not keep using the old ID.
 
-**限制**：先撤旧单再建新单，新单创建失败时旧单可能已撤销。
+**Limits**: the old order is cancelled before the new one is created; if creating the new order fails, the old order may already be cancelled.
 
-批量修改使用 `bulkModify(requests, options?)`，参数为上述请求数组，最多 20,000 项并受请求字节上限限制：
+For bulk modification use `bulkModify(requests, options?)`, which takes an array of the above requests, up to 20,000 items, subject to the request byte limit:
 
 ```ts
 const response = await exchange.bulkModify([
@@ -160,11 +162,11 @@ const response = await exchange.bulkModify([
 for (const status of response.statuses) console.log(status.outcome);
 ```
 
-SDK 在签名前验证整批字段并检查总动作额度，再一次提交。结果按请求顺序逐项返回，可能部分成功；不能在失败后直接重发整批。
+Before signing, the SDK validates the fields of the whole batch and checks the total action allowance, then submits once. Results are returned per item in request order and may be partially successful; do not resend the whole batch after a failure.
 
-## 杠杆与逐仓保证金
+## Leverage and isolated margin
 
-**用途**：设置市场杠杆，或增减某方向的逐仓保证金。
+**Purpose**: set market leverage, or add or remove isolated margin for one side.
 
 ```ts
 const leverage = await exchange.updateLeverage('BTC-USD', '5');
@@ -172,18 +174,18 @@ const margin = await exchange.updateIsolatedMargin('BTC-USD', 'Long', '10.50');
 console.log(leverage.statuses, margin.statuses);
 ```
 
-| 方法 | 参数 |
+| Method | Parameters |
 | --- | --- |
-| `updateLeverage(coin, leverage, options?)` | 完整 ticker、杠杆十进制字符串 |
-| `updateIsolatedMargin(coin, position, amount, options?)` | ticker、Long / Short、USD 金额字符串 |
+| `updateLeverage(coin, leverage, options?)` | Full ticker, leverage as a decimal string |
+| `updateIsolatedMargin(coin, position, amount, options?)` | Ticker, Long / Short, USD amount string |
 
-保证金正数增加、负数减少，最多 6 位小数。杠杆输入范围为 1–1,000,000，实际可用值由市场和账户风控决定。
+A positive margin amount adds and a negative amount removes, with up to 6 decimal places. Leverage input ranges from 1–1,000,000; the actual usable value is determined by market and account risk controls.
 
-**返回**：设置动作的执行结果；成功后通过账户状态重新读取设置和保证金。减少保证金或提高杠杆可能被风控拒绝。
+**Returns**: the execution result of the settings action; after success, re-read settings and margin from the account state. Removing margin or raising leverage may be rejected by risk controls.
 
-## TWAP 与分批订单
+## TWAP and scaled orders
 
-**用途**：创建按时间执行的交易计划，或按价格区间分配数量。
+**Purpose**: create a time-based trading plan, or distribute size across a price range.
 
 ```ts
 const twap = await exchange.twapOrder({
@@ -198,38 +200,38 @@ const scaled = await exchange.scaledOrder({
 console.log(twap.statuses, scaled.statuses);
 ```
 
-TWAP 的 `durationS` / `intervalS` 以秒计，`tolerancePpm` 默认 10,000，表示 1%。分批订单的 `size` 是总数量，`numOrders` 是子单数量；其余分配选项见 [API](../API.md#twap-与分批订单)。
+TWAP `durationS` / `intervalS` are in seconds, and `tolerancePpm` defaults to 10,000, meaning 1%. For scaled orders, `size` is the total size and `numOrders` is the number of child orders; see [API](../API.md#twap-and-scaled-orders) for the remaining distribution options.
 
-**返回**：创建动作的结果。TWAP 计划建立与全部子单成交是不同阶段；分批动作成功也不能据此认为所有子单成交。
+**Returns**: the result of the create action. Creating a TWAP plan and filling all of its child orders are different stages; a successful scaled-order action likewise does not mean all child orders are filled.
 
-取消 TWAP 使用父订单 ID：
+Cancel a TWAP using the parent order ID:
 
 ```ts
 const response = await exchange.cancelTwap({ coin: 'BTC-USD', orderId: twapParentId });
 console.log(response.statuses);
 ```
 
-父订单 ID 为创建 TWAP 时的 nonce，可从创建结果的 `prepared.nonce` 保存。取消沿用现有撤单动作，会取消父计划及其当前子单，免累计动作额度。已经成交的子单不会被撤回。
+The parent order ID is the nonce used when creating the TWAP, which you can save from `prepared.nonce` in the creation result. Cancellation reuses the existing cancel action, cancels the parent plan and its current child order, and is exempt from the cumulative action allowance. Child orders that already filled are not reversed.
 
-## Owner 授权和撤销 agent
+## Owner approval and agent revocation
 
-**用途**：由 owner 允许专门的交易 key 操作账户，并在需要时撤销。
+**Purpose**: let the owner allow a dedicated trading key to operate the account, and revoke it when needed.
 
 ```ts
 const approval = await owner.approveAgent(1, publicKey, 0n);
 if (!approval.successful()) throw new Error('Approval not confirmed');
 const agents = await owner.info.agents(account);
 console.log(agents.agents);
-// 撤销：await owner.revokeAgent(1);
+// Revoke: await owner.revokeAgent(1);
 ```
 
-`approveAgent(slot, publicKey, expiry = 0n, options?)` 的 slot 为 1–4，publicKey 为 32 字节，expiry 是到期高度，0 表示无到期高度。`revokeAgent(slot, options?)` 撤销指定槽位。
+For `approveAgent(slot, publicKey, expiry = 0n, options?)`, slot is 1–4, publicKey is 32 bytes, and expiry is the expiry height, where 0 means no expiry height. `revokeAgent(slot, options?)` revokes the given slot.
 
-**返回**：授权动作执行结果。需要确认执行成功后才能使用新 agent。agent 无权管理授权；换 key 或撤销可能使之前准备的签名失效。owner 的钱包和本地 key 接入见 [README](../../README.md#owner-钱包与-agent-授权)。
+**Returns**: the execution result of the authorization action. Use the new agent only after execution is confirmed successful. Agents cannot manage authorizations; key rotation or revocation may invalidate previously prepared signatures. See [README](../../README.md#owner-wallet-and-agent-approval) for owner wallet and local key integration.
 
-## 先准备，再提交
+## Prepare first, submit later
 
-**用途**：先检查并签名，待业务流程决定提交时再广播。
+**Purpose**: check and sign first, then broadcast when your application flow decides to submit.
 
 ```ts
 const prepared = await exchange.prepareOrder({
@@ -240,4 +242,4 @@ const response = await exchange.submitPrepared([prepared]);
 console.log(response.statuses);
 ```
 
-准备不会广播；提交会重新核对目标链、账户和当前授权。签名数据应按可提交交易保管。提交超时或响应丢失时，先查询原 account / nonce，见 [结果处理](RESULTS.md)。
+Preparing does not broadcast; submitting re-checks the target chain, account, and current authorization. Store signed data as you would a submittable transaction. If a submit times out or the response is lost, first query the original account / nonce; see [result handling](RESULTS.md).
