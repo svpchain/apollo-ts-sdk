@@ -1,0 +1,69 @@
+{
+  "name": "@svpchain/trading-sdk",
+  "version": "1.0.0",
+  "description": "Apollo Core TypeScript SDK: Info queries, Exchange trading, owner/agent signing and batch execution tracking",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svpchain/apollo-ts-sdk.git"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "proto",
+    "README.md",
+    "PROVENANCE.md",
+    "CHANGELOG.md",
+    "docs",
+    "examples",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol.d.ts",
+      "import": "./dist/protocol.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "npm run build",
+    "proto:generate": "buf generate",
+    "examples:build": "tsc -p examples/tsconfig.json",
+    "test:package": "npm run build && node tests/packaging.mjs",
+    "example:orders": "node .examples-dist/open-orders.js",
+    "example:cancel": "node .examples-dist/cancel.js",
+    "example:modify": "node .examples-dist/modify-order.js",
+    "test:examples": "npm run build && npm run examples:build && node --test tests/examples-cli.mjs"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "2.16.0",
+    "@connectrpc/connect": "2.2.0",
+    "@noble/curves": "2.2.0",
+    "@noble/hashes": "2.2.0",
+    "decimal.js": "10.6.0"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.75.0",
+    "@bufbuild/protoc-gen-es": "2.16.0",
+    "@types/node": "22.20.5",
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3",
+    "viem": "2.21.54",
+    "vitest": "4.1.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

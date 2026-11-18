@@ -1,0 +1,23 @@
+// Chain identity and node status.
+syntax = "proto3";
+
+package apollo.v1;
+
+import "apollo/v1/common.proto";
+
+service ChainService {
+  // Chain id, genesis hash and the node's executed height.
+  rpc GetChainInfo(GetChainInfoRequest) returns (ChainInfo);
+}
+
+message GetChainInfoRequest {}
+
+message ChainInfo {
+  string chain_id = 1;
+  bytes genesis_hash = 2;
+  string node_name = 3;
+  NodeRole role = 4;
+  uint64 executed_height = 9;
+  uint64 block_time_ms = 11;
+  uint32 markets = 12;
+}

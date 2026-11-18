@@ -1,0 +1,84 @@
+// Types shared by the Apollo client API.
+syntax = "proto3";
+
+package apollo.v1;
+
+// What kind of node answered.
+enum NodeRole {
+  NODE_ROLE_UNSPECIFIED = 0;
+  NODE_ROLE_VALIDATOR = 1;
+  NODE_ROLE_FULL = 2;
+  // Serves the history queries.
+  NODE_ROLE_ARCHIVE = 3;
+}
+
+// Where in the chain a reply was read: every reply carries one.
+message At {
+  // Block height the reply was read at.
+  uint64 executed_height = 1;
+}
+
+// Which side of the book.
+enum Side {
+  SIDE_UNSPECIFIED = 0;
+  SIDE_BID = 1;
+  SIDE_ASK = 2;
+}
+
+// Which of an account's two position slots (accounts are always hedged).
+enum PositionSide {
+  POSITION_SIDE_UNSPECIFIED = 0;
+  POSITION_SIDE_LONG = 1;
+  POSITION_SIDE_SHORT = 2;
+  // Reserved for system accounts; never used by user orders.
+  POSITION_SIDE_BOTH = 3;
+}
+
+enum FillKind {
+  FILL_KIND_UNSPECIFIED = 0;
+  // A taker order matched a resting maker order.
+  FILL_KIND_TRADE = 1;
+  // A liquidation; the taker is the account liquidated.
+  FILL_KIND_LIQUIDATION = 2;
+  FILL_KIND_BACKSTOP = 3;
+  // Off-book; `price` is the total quote quantums exchanged.
+  FILL_KIND_DELEVERAGE = 4;
+  // Settlement at the market's final price; `price` as for DELEVERAGE.
+  FILL_KIND_FINAL_SETTLEMENT = 5;
+}
+
+// One fill. Prices are in the market's price units (10^price_exponent USD),
+// sizes in its base quantums, fees in micro-USD (negative: a rebate).
+message Fill {
+  uint64 height = 1;
+  // Its index among the block's fills.
+  uint32 index = 2;
+  FillKind kind = 3;
+  uint32 market = 4;
+  // The side the taker traded on (BID: the taker bought).
+  Side taker_side = 5;
+  uint64 taker_account = 6;
+  uint64 taker_order = 7;
+  uint64 maker_account = 8;
+  uint64 maker_order = 9;
+  int64 price = 10;
+  int64 qty = 11;
+  int64 taker_fee = 12;
+  int64 maker_fee = 13;
+  PositionSide taker_position = 14;
+  PositionSide maker_position = 15;
+}
+
+// What one action did, as it executed.
+message ActionResult {
+  uint64 height = 1;
+  // 4294967295 when the action names no account.
+  uint64 account = 2;
+  uint64 nonce = 3;
+  bool ok = 4;
+  // When not ok: the reject reason, e.g. "InsufficientMargin".
+  string reject = 5;
+  optional uint64 order_id = 6;
+  // Fills it caused directly.
+  uint32 fills = 7;
+}

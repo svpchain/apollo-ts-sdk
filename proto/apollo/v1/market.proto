@@ -1,0 +1,126 @@
+// Markets, order books and tickers.
+syntax = "proto3";
+
+package apollo.v1;
+
+import "apollo/v1/common.proto";
+
+service MarketService {
+  // Every market with its parameters, and the liquidity, fee and funding
+  // settings.
+  rpc ListMarkets(ListMarketsRequest) returns (ListMarketsResponse);
+  // Aggregated depth, best price first.
+  rpc GetOrderBook(GetOrderBookRequest) returns (OrderBook);
+  // Mark, best prices, last trade and the last 24 hours' trading.
+  rpc GetTicker(GetTickerRequest) returns (Ticker);
+}
+
+enum MarketStatus {
+  MARKET_STATUS_UNSPECIFIED = 0;
+  MARKET_STATUS_INITIALIZING = 1;
+  MARKET_STATUS_ACTIVE = 2;
+  MARKET_STATUS_CANCEL_ONLY = 3;
+  MARKET_STATUS_FINAL_SETTLEMENT = 4;
+  MARKET_STATUS_CLOSED = 5;
+}
+
+message Market {
+  uint32 id = 1;
+  string ticker = 2;
+  MarketStatus status = 3;
+  // Prices are integers of 10^price_exponent USD.
+  int32 price_exponent = 4;
+  // A base quantum is 10^atomic_resolution base units.
+  int32 atomic_resolution = 5;
+  // Order sizes are multiples of this many base quantums.
+  int64 step_base_quantums = 6;
+  // Order prices are multiples of this many subticks.
+  int64 subticks_per_tick = 7;
+  int32 quantum_conversion_exponent = 8;
+  uint32 liquidity_tier = 9;
+  uint32 min_price_change_ppm = 10;
+  int32 default_funding_ppm = 11;
+  // The oracle price.
+  int64 mark = 12;
+  // Long positions, base quantums.
+  int64 open_interest = 13;
+  int64 funding_index = 14;
+}
+
+message LiquidityTier {
+  uint32 id = 1;
+  uint32 initial_margin_ppm = 2;
+  uint32 maintenance_fraction_ppm = 3;
+  uint64 impact_notional = 4;
+  uint64 open_interest_lower_cap = 5;
+  uint64 open_interest_upper_cap = 6;
+}
+
+message FeeTier {
+  uint64 absolute_volume_requirement = 1;
+  uint32 total_volume_share_requirement_ppm = 2;
+  uint32 maker_volume_share_requirement_ppm = 3;
+  int32 maker_fee_ppm = 4;
+  int32 taker_fee_ppm = 5;
+}
+
+// Funding intervals, in seconds of block time.
+message FundingConfig {
+  uint32 sample_seconds = 7;
+  uint32 tick_seconds = 3;
+  uint32 funding_rate_clamp_factor_ppm = 4;
+  uint32 premium_vote_clamp_factor_ppm = 5;
+  uint32 min_num_votes_per_sample = 6;
+}
+
+message ListMarketsRequest {}
+
+message ListMarketsResponse {
+  At at = 1;
+  repeated Market markets = 2;
+  repeated LiquidityTier liquidity_tiers = 3;
+  repeated FeeTier fee_tiers = 4;
+  FundingConfig funding = 5;
+}
+
+message GetOrderBookRequest {
+  uint32 market = 1;
+  // Price levels a side; at most 1000, 0 for 50.
+  uint32 depth = 2;
+}
+
+message Level {
+  int64 price = 1;
+  // Base quantums resting at this price.
+  int64 size = 2;
+}
+
+message OrderBook {
+  At at = 1;
+  uint32 market = 2;
+  // Best (highest) first.
+  repeated Level bids = 3;
+  // Best (lowest) first.
+  repeated Level asks = 4;
+}
+
+message GetTickerRequest {
+  uint32 market = 1;
+}
+
+message Ticker {
+  At at = 1;
+  uint32 market = 2;
+  int64 mark = 3;
+  optional int64 best_bid = 4;
+  optional int64 best_ask = 5;
+  // Last trade price; unset if none.
+  optional int64 last_price = 6;
+  // Trading over the last 24 hours.
+  int64 volume_24h = 7;
+  optional int64 high_24h = 8;
+  optional int64 low_24h = 9;
+  uint64 trades_24h = 10;
+  int64 open_interest = 11;
+  int64 funding_index = 12;
+}

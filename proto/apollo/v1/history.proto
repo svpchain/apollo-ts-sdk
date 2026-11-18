@@ -1,0 +1,136 @@
+// History queries. Served by archive nodes; other nodes answer
+// FAILED_PRECONDITION. Every reply reports how far the index reaches.
+syntax = "proto3";
+
+package apollo.v1;
+
+import "apollo/v1/common.proto";
+
+service HistoryService {
+  // How far the index reaches.
+  rpc GetIndexStatus(GetIndexStatusRequest) returns (IndexStatus);
+  // Fills of one account or one market (or every fill), oldest first.
+  rpc GetFills(GetFillsRequest) returns (GetFillsResponse);
+  // An account's actions and what came of them, oldest first.
+  rpc GetActionHistory(GetActionHistoryRequest) returns (GetActionHistoryResponse);
+  // Its order actions only: places, modifies, cancels.
+  rpc GetOrderHistory(GetActionHistoryRequest) returns (GetActionHistoryResponse);
+  rpc GetCandles(GetCandlesRequest) returns (GetCandlesResponse);
+  // A market's funding index at each block it changed, oldest first.
+  rpc GetFundingHistory(GetFundingHistoryRequest) returns (GetFundingHistoryResponse);
+}
+
+message GetIndexStatusRequest {}
+
+message IndexStatus {
+  // The last block the index holds.
+  uint64 indexed_height = 1;
+  // The first block the index holds.
+  uint64 first_height = 2;
+  // The node's executed height.
+  uint64 executed_height = 3;
+}
+
+// Where a page ends: pass it back as `after` for the next one.
+message Cursor {
+  uint64 height = 1;
+  uint32 index = 2;
+}
+
+message GetFillsRequest {
+  optional uint64 account = 1;
+  optional uint32 market = 2;
+  // Fills at or after this height...
+  uint64 from_height = 3;
+  // ...or strictly after this cursor, if given.
+  optional Cursor after = 4;
+  // At most 1000; 0 for 100.
+  uint32 limit = 5;
+}
+
+message GetFillsResponse {
+  IndexStatus index = 1;
+  repeated Fill fills = 2;
+  // Set when there may be more.
+  optional Cursor next = 3;
+}
+
+message GetActionHistoryRequest {
+  uint64 account = 1;
+  uint64 from_height = 2;
+  optional Cursor after = 3;
+  uint32 limit = 4;
+}
+
+message HistoricAction {
+  ActionResult result = 1;
+  // The 48-byte action encoding.
+  bytes action = 2;
+  // Its kind, e.g. "Place", "Cancel", "Withdraw".
+  string kind = 3;
+  // Its place in the block.
+  uint32 index = 4;
+}
+
+message GetActionHistoryResponse {
+  IndexStatus index = 1;
+  repeated HistoricAction actions = 2;
+  optional Cursor next = 3;
+}
+
+enum CandleInterval {
+  CANDLE_INTERVAL_UNSPECIFIED = 0;
+  CANDLE_INTERVAL_1M = 1;
+  CANDLE_INTERVAL_5M = 2;
+  CANDLE_INTERVAL_15M = 3;
+  CANDLE_INTERVAL_1H = 4;
+  CANDLE_INTERVAL_4H = 5;
+  CANDLE_INTERVAL_1D = 6;
+}
+
+// The newest `limit` intervals up to `to_unix_s` that start at or after
+// the interval holding `from_unix_s`, by block time; intervals without
+// trades are left out.
+message GetCandlesRequest {
+  uint32 market = 1;
+  CandleInterval interval = 2;
+  uint64 from_unix_s = 3;
+  // 0 for now.
+  uint64 to_unix_s = 4;
+  // At most 1000; 0 for 100.
+  uint32 limit = 5;
+}
+
+// Trades and liquidations only. Prices in the market's price units, volume
+// in base quantums.
+message Candle {
+  // Start of the interval, unix seconds.
+  uint64 start_unix_s = 1;
+  int64 open = 2;
+  int64 high = 3;
+  int64 low = 4;
+  int64 close = 5;
+  int64 volume = 6;
+  uint64 trades = 7;
+}
+
+message GetCandlesResponse {
+  IndexStatus index = 1;
+  repeated Candle candles = 2;
+}
+
+message GetFundingHistoryRequest {
+  uint32 market = 1;
+  uint64 from_height = 2;
+  uint32 limit = 3;
+}
+
+message FundingPoint {
+  uint64 height = 1;
+  int64 funding_index = 2;
+}
+
+message GetFundingHistoryResponse {
+  IndexStatus index = 1;
+  repeated FundingPoint points = 2;
+}

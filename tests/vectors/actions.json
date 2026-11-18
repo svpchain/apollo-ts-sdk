@@ -1,0 +1,561 @@
+{
+  "actions": [
+    {
+      "action": {
+        "account": 70001,
+        "amount": "2500000000",
+        "type": "Withdraw"
+      },
+      "encoded": "0200000071110100000000000000000000000000000000000000000000000000000000000000000000f9029500000000",
+      "name": "withdraw",
+      "nonce": "1",
+      "owner": {
+        "auth": "010000000000000000000000000a31301911616984dc5cb2387608f4b9cb5418ad3ea6601f6e125493d29c12681f6110c6809d2812ff90ac7e3ba9a4dc8a0d71688bdf1d0a2f25b6f98ad3dd411b",
+        "digest": "f121271c5ced92c4cc3e3db29c08cf24923108101ea49113ff3d961a03da51fe"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "is_cross": true,
+        "market": 0,
+        "position": "Long",
+        "price": "6543210000",
+        "side": "Bid",
+        "size": "15000",
+        "tif": "Gtc",
+        "type": "Place"
+      },
+      "agent": {
+        "auth": "0138ffba552506000107000000336e7e7de0df61c108b95037f12303ea0445272fe2ce5633d64c9d146b0cba9ccfbe408629393c18a68049ca1b5f2e02d26017aad3124d0258123f281e1fa70400",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f03000005711101000000000000000000000000000000000000000000000000001076018601000000983a0000000000000138ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "03000005711101000000000000000000000000000000000000000000000000001076018601000000983a000000000000",
+      "name": "place_bid_gtc_long_cross",
+      "nonce": "1729900000000001",
+      "owner": {
+        "auth": "0138ffba552506000000000000092cd9ceb182c5dc70d9b7f5bb3769473ecc977ca452eb5c361de433d034884334af6a61971ca489afc23fc8634e5d17940cd1c1d88a0b520cebd70c14caa2271b",
+        "digest": "b7c648d2ce82f82bce0b03dcbe46a7624afd80be3a4adbd471259f41c26f9417"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "is_cross": false,
+        "market": 3,
+        "position": "Short",
+        "price": "251850",
+        "side": "Ask",
+        "size": "7000000",
+        "tif": "Ioc",
+        "type": "Place"
+      },
+      "agent": {
+        "auth": "0238ffba552506000107000000f7dae18b0944db626c390e368eafe3d8e8599912cdb821cf36487c3f1cfd3899bea3d87036dac840676e92e341aee9516bceafb8a47c82cd439fabb9c8e5c80000",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f0301010271110100030000000000000000000000000000000000000000000000cad7030000000000c0cf6a00000000000238ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "0301010271110100030000000000000000000000000000000000000000000000cad7030000000000c0cf6a0000000000",
+      "name": "place_ask_ioc_short_isolated",
+      "nonce": "1729900000000002",
+      "owner": {
+        "auth": "0238ffba552506000000000000da1cd731968ef3516b255484ec311708eeedc8800b179c1a86bb0898aa18a5cb3b2f608c6f07fd8d6084ed3cf3423aec57576bd7bb989ac637da91a16f8e97ab1b",
+        "digest": "8936048ea2f3092494f326155db9096a81ce3b05c6fb2539149e92914b85aafb"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "is_cross": true,
+        "market": 1,
+        "position": "Long",
+        "price": "17976",
+        "side": "Bid",
+        "size": "242677",
+        "tif": "PostOnly",
+        "type": "Place"
+      },
+      "agent": {
+        "auth": "0338ffba552506000107000000507f4d9c49f6f811dc287d99a997ca857a2a7ec13999ba3ff5bad92c5718ed78dec7e8ad4b2537e4c5fba6b4b4016254fb61ff4b664bf5f052f33f7a0e9bc30100",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f03000205711101000100000000000000000000000000000000000000000000003846000000000000f5b30300000000000338ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "03000205711101000100000000000000000000000000000000000000000000003846000000000000f5b3030000000000",
+      "name": "place_post_only",
+      "nonce": "1729900000000003",
+      "owner": {
+        "auth": "0338ffba55250600000000000026497d7db98f845f89412c1ec5fbea779b9601e7a46b6ddd47c35c674e4319ca41eef18fdbe519a5f190faafe98472aa5f9c1fc896241c706e05cb19070fea431c",
+        "digest": "fc50d9162cf0d23d5cc9ba6ef971f7f9827a25e98ce73bda771feb0c28a6ac97"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 0,
+        "order_id": "1729900000000001",
+        "type": "Cancel"
+      },
+      "agent": {
+        "auth": "0438ffba5525060001070000001fa97dcaf684637a4169da2c593a615cca2add518e415860fbfd4507a75a7ed556fcbf34dabc7aca2aff5d5cf9fd7beaa2175ad55706a52afc37b4fa42610d0f00",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f040000007111010000000000000000000138ffba552506000000000000000000000000000000000000000000000000000438ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "040000007111010000000000000000000138ffba55250600000000000000000000000000000000000000000000000000",
+      "name": "cancel",
+      "nonce": "1729900000000004",
+      "owner": {
+        "auth": "0438ffba5525060000000000001f2fb62d8bc2437c808236ffb3e203e19d63dc631ec4d9091e360e431e485ba3291662bd393beaf2a6ac608e6aa2ec7bccf5f65b16608275c13d8581c8347ac41c",
+        "digest": "711ffa89460d9e04003dff61fda2a1e2d0254235727411eb93efb82b38f8082a"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 0,
+        "order_id": "1729900000000001",
+        "price": "6540000000",
+        "size": "12000",
+        "type": "Modify"
+      },
+      "agent": {
+        "auth": "0538ffba552506000107000000dbe0864c375339061f31b219ffc61ccbb66fd35f3d33bcd4733b91da92da8f7dc01c30c2dde50947613f156a46e593ac326fbd288f5ef550179de648d940b60a00",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f050000007111010000000000000000000138ffba552506000000000000000000007bd08501000000e02e0000000000000538ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "050000007111010000000000000000000138ffba552506000000000000000000007bd08501000000e02e000000000000",
+      "name": "modify",
+      "nonce": "1729900000000005",
+      "owner": {
+        "auth": "0538ffba552506000000000000da5eca67bf7270e50ef07d942cc302e8a5c522f1200f0784bc640e2b7db08c410c979c6bd918cf1d586694238f687d57dc83f135dd7ed8f5deb05bb51f69e0c81b",
+        "digest": "e9f066b17f0bcca438b7ba8cb9ce9c17061fdf4fb74978951284102164718172"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 2,
+        "type": "CancelAll"
+      },
+      "agent": {
+        "auth": "0638ffba552506000107000000fa5c50d82b5a31483dc44b0062b6bf3398bf1b5cd4a8a8d30102c425aa729b68339256fa90cb3da521ccda62ffd7de45366a141838721609ae22c61f7f9f500000",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f1400000071110100020000000000000000000000000000000000000000000000000000000000000000000000000000000638ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "140000007111010002000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "name": "cancel_all_one_market",
+      "nonce": "1729900000000006",
+      "owner": {
+        "auth": "0638ffba55250600000000000079ecc5ef8fda72e0dcb4f896ade107639e392f06fa71d8e6a436561c51c52e5d757994a59cf9d191616c540291c79a7d3448b9a889702a6c445eea8d3a1400cf1c",
+        "digest": "98d9e4334a173b9299804f879901b275b918b2f44bd4034079754c0a8fa57dfb"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 65535,
+        "type": "CancelAll"
+      },
+      "agent": {
+        "auth": "0738ffba552506000107000000c9d17fefd91da18547d22ffc33a5b73849cddc3b93c2405ad76756e91e315022506b88146aac86c93bf7153ecfcdfdb1a67ebf86c86f86dbad0376a6e8bd820c00",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f1400000071110100ffff00000000000000000000000000000000000000000000000000000000000000000000000000000738ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "1400000071110100ffff0000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "name": "cancel_all_markets",
+      "nonce": "1729900000000007",
+      "owner": {
+        "auth": "0738ffba552506000000000000f6fa903004c648d11fc04f9d433720985916b565247613e77ea7ba0d49f9a91b672d370d414e715ec483c0af3383b82aaf5b4d52e07b04c8659f3448cf8ddad91c",
+        "digest": "68921a4607537f115ca77943d24002bcff91ab8ac5027052969f24537412f294"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 0,
+        "opts": {
+          "builder": null,
+          "good_til_block": "0",
+          "is_cross": true,
+          "position": "Long",
+          "reduce_only": true,
+          "trigger": {
+            "kind": "StopLoss",
+            "price": "6100000000"
+          }
+        },
+        "price": "6000000000",
+        "side": "Ask",
+        "size": "15000",
+        "tif": "Ioc",
+        "type": "PlaceWith"
+      },
+      "agent": {
+        "auth": "0838ffba5525060001070000002a5c2579a9b23639c1e1fd63d4e6e0e194bf4ff2c9e7477c51a4159666611075c4edd0970b8d53a4432c149dd01889855bdeb95a9c6855d6ceda6dfde463750700",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f1301012b7111010000000000000000000000000000000000009d966b0100000000bca06501000000983a0000000000000838ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "1301012b7111010000000000000000000000000000000000009d966b0100000000bca06501000000983a000000000000",
+      "name": "place_with_stop_loss_reduce_only",
+      "nonce": "1729900000000008",
+      "owner": {
+        "auth": "0838ffba55250600000000000059fcbe2907978b39cc54768408a0109fadbbfc967d124640f07f7766fdbd699207e9530a03551172e75d10d954a5f796127bf52a0976e5174acc490e0ed903f01b",
+        "digest": "917ba56663be996a6ae4f3a7ce255916b315e1b44a455c60243146f9e27e68cf"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 0,
+        "opts": {
+          "builder": {
+            "account": 99,
+            "fee_ppm": 1500
+          },
+          "good_til_block": "0",
+          "is_cross": false,
+          "position": "Short",
+          "reduce_only": false,
+          "trigger": {
+            "kind": "TakeProfit",
+            "price": "5100000000"
+          }
+        },
+        "price": "5000000000",
+        "side": "Bid",
+        "size": "9000",
+        "tif": "Gtc",
+        "type": "PlaceWith"
+      },
+      "agent": {
+        "auth": "0938ffba5525060001070000001454dd779c9556260732902332359ff84bfcd92c98e7b035ce1512a1f18eb287816f3a10ca5fc13da290cd8fb61d354c3cbab459b251cc6679040222532b110c00",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f1300001671110100000063000000dc05000000000000000000d3fb2f0100000000f2052a0100000028230000000000000938ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "1300001671110100000063000000dc05000000000000000000d3fb2f0100000000f2052a010000002823000000000000",
+      "name": "place_with_take_profit_builder",
+      "nonce": "1729900000000009",
+      "owner": {
+        "auth": "0938ffba552506000000000000a4c83cfefc4aac0a330170e301023c0050f958e97a658cc3338abe6276498b6c22d76b9a388981ad4e1dbdaf853ff47f7ca2ba3f93fa18c90432a3e0741f63831c",
+        "digest": "1cecadea0f71e2bb22bf9ff44025c4b2ae3d38e1ccee955e5dca2d5144cc987c"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 5,
+        "opts": {
+          "builder": null,
+          "good_til_block": "123456789",
+          "is_cross": true,
+          "position": "Long",
+          "reduce_only": false,
+          "trigger": null
+        },
+        "price": "123456",
+        "side": "Bid",
+        "size": "1000",
+        "tif": "Gtc",
+        "type": "PlaceWith"
+      },
+      "agent": {
+        "auth": "0a38ffba552506000107000000af0257ff11b57ea8eca39faf6eb79d7a2cac06d1747d0f01fb9f1768318b8bc6ec026ea50c71452cb54f45d1b3e0c346551cec63ec2971cbfba94a81149d500800",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f1300002871110100050000000000000015cd5b0700000000000000000000000040e2010000000000e8030000000000000a38ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "1300002871110100050000000000000015cd5b0700000000000000000000000040e2010000000000e803000000000000",
+      "name": "place_with_good_til_block",
+      "nonce": "1729900000000010",
+      "owner": {
+        "auth": "0a38ffba552506000000000000ce9450bf4bc10fc88d41c5518c6d2237a82261c92b3e6c3ae6075aeaa333e7c3510579d318f272301244ea7a209859d18a912b0d674b4aab97c8c7bd7e93cd931c",
+        "digest": "9fad505a0c1b80c2dfd59e127a9e69654220a230c5a0d58efd0bd27d706caa8a"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "imf_ppm": 200000,
+        "market": 0,
+        "type": "SetLeverage"
+      },
+      "agent": {
+        "auth": "0b38ffba552506000107000000c7c3ada4c625ec22ba3fe65349e472c1d285eb65944054293b2cafb153d5836255f239c86652758451a4f73fb6e583cd29341235cdfa472826a5ca759418b70a00",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f15000000711101000000000000000000400d0300000000000000000000000000000000000000000000000000000000000b38ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "15000000711101000000000000000000400d030000000000000000000000000000000000000000000000000000000000",
+      "name": "set_leverage",
+      "nonce": "1729900000000011",
+      "owner": {
+        "auth": "0b38ffba552506000000000000a7f68a8b3705c395e2c4a3a4bfd781f7496edce1bc9b0107bcdc5bb496a054696803560c1b43101638a84abb8629eb68653c272abe073f6c94bb097cb009669f1b",
+        "digest": "419766541fc113434e6a69f7878bb391f7d095f22278c4cfe7d7f2ede12ed3c2"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "amount": "125000000",
+        "market": 3,
+        "position": "Short",
+        "type": "UpdateIsolatedMargin"
+      },
+      "agent": {
+        "auth": "0c38ffba552506000107000000e393935135e2a786c140b68c0edb29b54bca4fe6dd21b0af380ff9ca8d25978994b6253ba48eaf5b8c465950e6686b7b9d98d5856b37211676cafcfd80df690100",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f1200000271110100030000000000000000000000000000000000000000000000000000000000000040597307000000000c38ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "120000027111010003000000000000000000000000000000000000000000000000000000000000004059730700000000",
+      "name": "add_isolated_margin",
+      "nonce": "1729900000000012",
+      "owner": {
+        "auth": "0c38ffba552506000000000000b7286f81a78d1a67083735d93add1e15b64be2fab1c5cda67982f1e0802f44d7213f3430d15da7e37b5f9b5b397ae24b52d07be199ff4deb970906675cdc826e1b",
+        "digest": "955b96ea1b20ed673a4852eb953ea8c1ebbd2b53bd063f1950e5f3e1b05207c8"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "amount": "-40000000",
+        "market": 3,
+        "position": "Long",
+        "type": "UpdateIsolatedMargin"
+      },
+      "agent": {
+        "auth": "0d38ffba552506000107000000ff3e8d9553c198d9115755cfaca2767443980067cb847fc0c071d04626bb55e7ff2162fd7f1769d70bed037bc38cd4349281dcc73bc7a77cb440505a31cd3f0a00",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f1200000171110100030000000000000000000000000000000000000000000000000000000000000000a69dfdffffffff0d38ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "1200000171110100030000000000000000000000000000000000000000000000000000000000000000a69dfdffffffff",
+      "name": "remove_isolated_margin",
+      "nonce": "1729900000000013",
+      "owner": {
+        "auth": "0d38ffba5525060000000000000a8f4f080373b08d71dfc17fb0cad97d9a84e90cc975c61a67988998334c2bfc51fd69edd86adf87f50e006dbb8ef4ce46bfb751d60e4cf8d46ae6eeef11acd61b",
+        "digest": "60c6f415934e252b075024d7226772f061706f4e43c80766224315bc0cc852bd"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "duration_s": 3600,
+        "interval_s": 30,
+        "is_cross": true,
+        "market": 0,
+        "position": "Short",
+        "price": "0",
+        "side": "Ask",
+        "size": "100000",
+        "tolerance_ppm": 5000,
+        "type": "PlaceTwap"
+      },
+      "agent": {
+        "auth": "0e38ffba552506000107000000db0a4b7f55d032243edbe9a5d97a18fce252cd7439d021ccff825db7fd42250b4c1f6c6f12019961b92ada5a0ea88c378fe27aa9c041735224575c954f5e590500",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f16010006711101000000000000000000100e00001e00000088130000000000000000000000000000a0860100000000000e38ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "16010006711101000000000000000000100e00001e00000088130000000000000000000000000000a086010000000000",
+      "name": "place_twap",
+      "nonce": "1729900000000014",
+      "owner": {
+        "auth": "0e38ffba55250600000000000040c6177f6130f2a732abd511b765233b70c0020b348cafcd3622c15fa1d32202231a8df27ac9aeeef5533ea2af5c0cabded81521de71e9e9dc980781991b9cd11b",
+        "digest": "011cce3d19df5d4d841d2934b5d98c3304ef497afd5762392e4251ecf5502cf3"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 0,
+        "opts": {
+          "builder": null,
+          "good_til_block": "200000",
+          "is_cross": false,
+          "position": "Long",
+          "reduce_only": false,
+          "trigger": null
+        },
+        "params": {
+          "highest_price": "6500000000",
+          "lowest_price": "6000000000",
+          "magnitude_ppm": 150000,
+          "num_orders": 10,
+          "profile": "DecRatio",
+          "spacing": "Geometric"
+        },
+        "side": "Bid",
+        "size": "50000",
+        "tif": "PostOnly",
+        "type": "PlaceScaled"
+      },
+      "agent": {
+        "auth": "0f38ffba55250600010700000003160f635afea5aa2d8a963c5315508379208dcc7d01fe998bd1b31cc6db7f510a8c0affaf5d4481d1476d7bf5b03966bccce6678ce576974e8b289b4eebb80300",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f1700022b7111010000000a00f0490200400d03000000000000bca0650100000000216e830100000050c30000000000000f38ffba552506000107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "1700022b7111010000000a00f0490200400d03000000000000bca0650100000000216e830100000050c3000000000000",
+      "name": "place_scaled",
+      "nonce": "1729900000000015",
+      "owner": {
+        "auth": "0f38ffba552506000000000000a910a934eeecd8c872d5dd773e8256fb3c0fe8a170a15e954dedc530f3552f5652e1fbdc8a639c576807581aebef51c6c81abb688ae8f55e5b54d5bb40dee0d01b",
+        "digest": "60d3eaa794d7655da149fb8f46802929bd7b7a5e1966aeefc3212a4e65b2c5be"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "amount": "1000000000",
+        "type": "Stake",
+        "validator": 2
+      },
+      "encoded": "0800000071110100020000000000000000000000000000000000000000000000000000000000000000ca9a3b00000000",
+      "name": "stake",
+      "nonce": "1729900000000016",
+      "owner": {
+        "auth": "1038ffba55250600000000000091c985c4990c76e3fbdfa7e6799633202d98a403244e09c0d7bf7a49e9916c02078a0e591bbdc1c9d913a8f928b47aae309975299698a059246ce6a64ef84b6a1b",
+        "digest": "416300dfd95ca6cd7cd9a678ae181d31e7e4f0c8ca38c56c36f8e1f22bdd0560"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "amount": "400000000",
+        "type": "Unstake",
+        "validator": 2
+      },
+      "encoded": "090000007111010002000000000000000000000000000000000000000000000000000000000000000084d71700000000",
+      "name": "unstake",
+      "nonce": "1729900000000017",
+      "owner": {
+        "auth": "1138ffba552506000000000000f63973910f68ffccefe63280efb7d8b5dbcfb019b6996d3a4d4f26be96e331626bd5d76d978842209cff519ca11bb19b5a131cb82de300a5e7956c127c5a48291c",
+        "digest": "506ad2debf5dfe1b7f14695f67b1b0acbefbf89a2b5096557317fb019e853d4d"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "expiry": "9000000",
+        "key": "29e5833a915a6429a4e3a7948475c338ef436eb82be89c92f059704403db9d55",
+        "slot": 1,
+        "type": "ApproveAgent"
+      },
+      "encoded": "0a00000171110100405489000000000029e5833a915a6429a4e3a7948475c338ef436eb82be89c92f059704403db9d55",
+      "name": "approve_agent",
+      "nonce": "1729900000000018",
+      "owner": {
+        "auth": "1238ffba552506000000000000e36f04b194df6b897fee3ed572c67960c5dcc50279a6351f9ae3a244018b60f85f18b391db540f5add7da9ad0a24fb5cf18e0ce171d034ea086c3130b0374b801c",
+        "digest": "85c8975f476000cf87fd6da92bbefe1891f105f3e0b9c712711917f6d64a6f48"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "slot": 1,
+        "type": "RevokeAgent"
+      },
+      "encoded": "0b0000017111010000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "name": "revoke_agent",
+      "nonce": "1729900000000019",
+      "owner": {
+        "auth": "1338ffba552506000000000000eae57df238740f1cb217e6ae7469403acb20fbe6a28db199c0ba3fa244ee84c33ebf17a05b498b583c53e2bf41bbff69c78092fda0a55f42ca2aae80f44206c91c",
+        "digest": "f023843120c444df267fd3a4d286b0cac3782868069a46c2d7357f51a5bfd164"
+      }
+    },
+    {
+      "action": {
+        "account": 70001,
+        "market": 0,
+        "opts": {
+          "builder": null,
+          "good_til_block": "0",
+          "is_cross": true,
+          "position": "Long",
+          "reduce_only": false,
+          "trigger": null
+        },
+        "price": "1",
+        "side": "Bid",
+        "size": "1",
+        "tif": "Gtc",
+        "type": "PlaceWith"
+      },
+      "agent": {
+        "auth": "ffffffffffffffff0107000000ed843470243a8f64280c49c8d984149c76b583f083e579082afd9b8cb5c53ebda1870d5bde97e1fea415f053560f9dfe495c1331e6e738d016a3aa0a4b53040200",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f130000287111010000000000000000000000000000000000000000000000000001000000000000000100000000000000ffffffffffffffff0107000000",
+        "seq": 7,
+        "slot": 1
+      },
+      "encoded": "130000287111010000000000000000000000000000000000000000000000000001000000000000000100000000000000",
+      "name": "place_with_defaults",
+      "nonce": "18446744073709551615",
+      "owner": {
+        "auth": "ffffffffffffffff000000000062a4b26d1a7fe70883e746618951c940ab27ae4b1c2f0d99243b966e00bebed372a59f1906c381c9288ee427d921120da8b981d730be40a28c8318f0f49f009b1b",
+        "digest": "08b83f50a65d32d38c50276e653fff4d20b2d3acdd3d10fc34a2973a8dc470fb"
+      }
+    }
+  ],
+  "context": "apollo-action-v3",
+  "description": "Apollo action codec and signing test vectors",
+  "eip712": {
+    "action_type": "Action(bytes action,uint64 nonce)",
+    "domain_separator": "47bad59c8a213d83f86910d2c6d1395f65eec7747ba1c3b1179157d05d001d2d",
+    "domain_type": "EIP712Domain(string name,string version,bytes32 salt)",
+    "name": "Apollo",
+    "version": "1"
+  },
+  "genesis_hash": "b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f",
+  "keys": {
+    "agent_public": "29e5833a915a6429a4e3a7948475c338ef436eb82be89c92f059704403db9d55",
+    "agent_seed": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+    "owner_address": "a8049bb68181799124f98e467dd749e120abfa64",
+    "owner_secret": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+  },
+  "operator": {
+    "actions": [
+      {
+        "action": {
+          "address": "a8049bb68181799124f98e467dd749e120abfa64",
+          "amount": "1000000000",
+          "type": "Deposit"
+        },
+        "auth": "6438ffba5525060000000000000f08c8b1e27ecdff4aa0efd357c45dd41ea8e5a592f932805b2c03fc325c719bf1c69eeaaf328546270c23777b4fa49c70f4e2e9888cb967de02fb9628647c0800",
+        "encoded": "01000000000000000000000000000000a8049bb68181799124f98e467dd749e120abfa640000000000ca9a3b00000000",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f01000000000000000000000000000000a8049bb68181799124f98e467dd749e120abfa640000000000ca9a3b000000006438ffba552506000000000000",
+        "name": "deposit_opens_account",
+        "nonce": "1729900000000100"
+      },
+      {
+        "action": {
+          "address": "1111111111111111111111111111111111111111",
+          "amount": "10000000",
+          "type": "Deposit"
+        },
+        "auth": "6538ffba552506000000000000342e113eb53fbec0cf0667a5196b151c83f8ce2a06fd8a8a9bebfb979cd5b4ccefc314325302cc4264eda996fbd51604896a4750076b1ca37085fbf0296c090100",
+        "encoded": "010000000000000000000000000000001111111111111111111111111111111111111111000000008096980000000000",
+        "message": "61706f6c6c6f2d616374696f6e2d7633b316f2bcfe077661f56fcb8d5f71c0b6f4ca83f13a3a81d7db4df466cd21dd6f0100000000000000000000000000000011111111111111111111111111111111111111110000000080969800000000006538ffba552506000000000000",
+        "name": "deposit_minimum",
+        "nonce": "1729900000000101"
+      }
+    ],
+    "public": "d9bf2148748a85c89da5aad8ee0b0fc2d105fd39d41a4c796536354f0ae2900c",
+    "seed": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"
+  },
+  "sizes": {
+    "action": 48,
+    "agent_message": 109,
+    "auth": 78
+  },
+  "version": 1
+}

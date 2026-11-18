@@ -1,0 +1,121 @@
+// Account state.
+syntax = "proto3";
+
+package apollo.v1;
+
+import "apollo/v1/common.proto";
+
+service AccountService {
+  // Collateral, equity, margin, allowance, nonce, settings and positions.
+  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
+  rpc GetPositions(AccountRequest) returns (GetPositionsResponse);
+  // Resting orders, optionally in one market.
+  rpc GetOpenOrders(GetOpenOrdersRequest) returns (GetOpenOrdersResponse);
+  // Its agent keys (slots 1 to 4).
+  rpc GetAgents(AccountRequest) returns (GetAgentsResponse);
+  // Its highest nonces: what a signer continues from.
+  rpc GetNonce(AccountRequest) returns (GetNonceResponse);
+}
+
+message AccountRequest {
+  uint64 account = 1;
+}
+
+message GetAccountRequest {
+  oneof by {
+    uint64 account = 1;
+    // The EVM address (20 bytes) that owns it.
+    bytes owner = 2;
+  }
+}
+
+message Position {
+  uint32 market = 1;
+  PositionSide side = 2;
+  // Signed size in base quantums (positive: long).
+  int64 size = 3;
+  // Signed cost basis, micro-USD.
+  int64 entry = 4;
+  // Resting on the book, base quantums.
+  int64 open_bids = 5;
+  int64 open_asks = 6;
+  // The market's funding index when this position's funding last settled.
+  int64 funding_index = 7;
+  // Isolated margin pool, micro-USD; 0 for cross.
+  int64 isolated_margin = 8;
+}
+
+message MarketSetting {
+  uint32 market = 1;
+  // Initial margin fraction in ppm; 0 for the market's default.
+  uint32 imf_ppm = 2;
+  bool isolated = 3;
+}
+
+message GetAccountResponse {
+  At at = 1;
+  uint64 account = 2;
+  bytes owner = 3;
+  // Micro-USD.
+  int64 collateral = 4;
+  int64 equity = 5;
+  // Equity above the initial margin its positions and orders need.
+  int64 margin_headroom = 6;
+  bool below_maintenance = 7;
+  uint64 actions_used = 8;
+  uint64 volume_usd = 9;
+  uint64 last_nonce = 10;
+  uint32 open_orders = 11;
+  repeated MarketSetting settings = 12;
+  repeated Position positions = 13;
+}
+
+message GetPositionsResponse {
+  At at = 1;
+  repeated Position positions = 2;
+}
+
+message GetOpenOrdersRequest {
+  uint64 account = 1;
+  optional uint32 market = 2;
+}
+
+message OpenOrder {
+  // Its id: the nonce of the action that placed it.
+  uint64 order_id = 1;
+  uint32 market = 2;
+  Side side = 3;
+  int64 price = 4;
+  int64 remaining = 5;
+  // Last height it may rest; 0 for none.
+  uint64 expiry = 6;
+  PositionSide position = 7;
+}
+
+message GetOpenOrdersResponse {
+  At at = 1;
+  repeated OpenOrder orders = 2;
+}
+
+message Agent {
+  uint32 slot = 1;
+  // Ed25519 key.
+  bytes key = 2;
+  uint32 seq = 3;
+  // Last height it may sign at; 0 for no expiry.
+  uint64 expiry = 4;
+}
+
+message GetAgentsResponse {
+  At at = 1;
+  repeated Agent agents = 2;
+}
+
+message GetNonceResponse {
+  At at = 1;
+  // The highest it has used; sign the next action with a higher one.
+  uint64 last_nonce = 2;
+  // Its window of used nonces, ascending (zeros until filled): a nonce at
+  // or below the lowest, or in the window, is refused.
+  repeated uint64 window = 3;
+}
